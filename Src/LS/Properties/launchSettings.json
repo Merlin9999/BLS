@@ -1,0 +1,31 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "LS - No Args": {
+      "commandName": "Project"
+    },
+    "LS - All Files": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\*"
+    },
+    "LS - Project Files - All": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\..\\..\\**\\*"
+    },
+    "LS - ProjectFiles - Exclude bin & obj": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\* -b ..\\..\\.. -x bin\\**\\* obj\\**\\*"
+    },
+    "LS - ProjectFiles & Parent .vs": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\* -b ..\\..\\.. ..\\..\\..\\.. -x bin\\**\\* obj\\**\\* LS\\**"
+    },
+    "LS - ProjectFiles & Parent & Sorted": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\* -b ..\\..\\.. ..\\..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -s"
+    }
+  }
+}
