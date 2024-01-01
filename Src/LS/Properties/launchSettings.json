@@ -26,6 +26,10 @@
     "LS - ProjectFiles & Parent & Sorted": {
       "commandName": "Project",
       "commandLineArgs": "**\\* -b ..\\..\\.. ..\\..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -s"
+    },
+    "LS - Path Executables": {
+      "commandName": "Project",
+      "commandLineArgs": "path *.exe *.com *.bat *.con *.cm"
     }
   }
 }

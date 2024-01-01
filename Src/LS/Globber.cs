@@ -4,12 +4,13 @@ using System;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
+using System.Security;
 
 namespace CLConsole;
 
 public class Globber
 {
-    private readonly ListFilesArgs _args;
+    private readonly IGlobberArgs _args;
     private readonly TextWriter _outputWriter;
     private ImmutableList<string> _fileCache = ImmutableList<string>.Empty;
 
@@ -21,7 +22,7 @@ public class Globber
     private bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this._args.BasePaths.Count() > 1;
     private bool CanOutputImmediately => this._canOutputImmediately ??= !this._args.Sort && (this._args.AllowDuplicates || this._args.BasePaths.Count() <= 1);
 
-    public Globber(ListFilesArgs args, TextWriter outputWriter)
+    public Globber(IGlobberArgs args, TextWriter outputWriter)
     {
         this._args = args;
         this._outputWriter = outputWriter;
@@ -31,18 +32,20 @@ public class Globber
     {
         Matcher matcher = CreateMatcher(this._args);
         List<string> basePaths = this._args.BasePaths.ToList();
-        
+
+        var ignoredFileAccessExceptions = new List<Exception>();
+
         if (basePaths.Count < 2)
         {
             string basePath = basePaths.Count < 1 ? "./" : basePaths[0];
-            List<string> files = await this.FindMatchesAsync(basePath, matcher);
+            List<string> files = await this.FindMatchesAsync(basePath, matcher, ignoredFileAccessExceptions);
             await this.AddFilesAsync(basePath, files);
         }
         else
         {
             foreach (string basePath in basePaths)
             {
-                List<string> files = await this.FindMatchesAsync(basePath, matcher);
+                List<string> files = await this.FindMatchesAsync(basePath, matcher, ignoredFileAccessExceptions);
                 await this.AddFilesAsync(basePath, files);
             }
         }
@@ -51,9 +54,29 @@ public class Globber
         // and need to be output now.
         if (!this.CanOutputImmediately)
             await this.OutputCachedFilesAsync(basePaths);
+
+        if (ignoredFileAccessExceptions.Count > 0)
+            await this.OutputIgnoredExceptionsAsync(ignoredFileAccessExceptions);
     }
 
-    private static Matcher CreateMatcher(ListFilesArgs args)
+    private async Task OutputIgnoredExceptionsAsync(List<Exception> ignoredFileAccessExceptions)
+    {
+        if (ignoredFileAccessExceptions.Count > 0)
+            await this._outputWriter.WriteLineAsync("\nExceptions ignored:");
+
+        foreach (Exception exception in ignoredFileAccessExceptions)
+            await this._outputWriter.WriteLineAsync($"   {TranslateAggregateException(exception).Message}");
+
+        Exception TranslateAggregateException(Exception exc)
+        {
+            if (exc is AggregateException agg && agg.InnerExceptions.Count == 1)
+                return agg.InnerExceptions[0];
+
+            return exc;
+        }
+    }
+
+    private static Matcher CreateMatcher(IGlobberArgs args)
     {
         StringComparison stringComparison = args.CaseSensitive
             ? StringComparison.Ordinal
@@ -65,9 +88,34 @@ public class Globber
         return matcher;
     }
 
-    private Task<List<string>> FindMatchesAsync(string basePath, Matcher matcher)
+    private Task<List<string>> FindMatchesAsync(string basePath, Matcher matcher, List<Exception> ignoredFileAccessExceptions)
     {
-        PatternMatchingResult result = matcher.Execute(new DirectoryInfoWrapper(new DirectoryInfo(basePath)));
+        PatternMatchingResult result;
+        try
+        {
+            result = matcher.Execute(new DirectoryInfoWrapper(new DirectoryInfo(basePath)));
+        }
+        catch (SecurityException se) when (!this._args.AbortOnFileSystemAccessExceptions)
+        {
+            ignoredFileAccessExceptions.Add(se);
+            return Task.FromResult(new List<string>());
+        }
+        catch (UnauthorizedAccessException uae) when (!this._args.AbortOnFileSystemAccessExceptions)
+        {
+            ignoredFileAccessExceptions.Add(uae);
+            return Task.FromResult(new List<string>());
+        }
+        catch (DirectoryNotFoundException dnfe) when (!this._args.AbortOnFileSystemAccessExceptions)
+        {
+            ignoredFileAccessExceptions.Add(dnfe);
+            return Task.FromResult(new List<string>());
+        }
+        catch (IOException ioe) when (!this._args.AbortOnFileSystemAccessExceptions)
+        {
+            ignoredFileAccessExceptions.Add(ioe);
+            return Task.FromResult(new List<string>());
+        }
+
         return Task.FromResult(result.Files.Select(x => this.GetOutputPath(basePath, x.Path)).ToList());
     }
 
