@@ -29,7 +29,11 @@
     },
     "LS - Path Executables": {
       "commandName": "Project",
-      "commandLineArgs": "path *.exe *.com *.bat *.con *.cm"
+      "commandLineArgs": "path *.exe *.com *.bat *.con *.cmd"
+    },
+    "LS - Users - Exceptions": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\* -b c:\\Users"
     }
   }
 }

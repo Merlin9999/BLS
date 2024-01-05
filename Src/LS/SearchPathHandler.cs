@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CLConsole
 {
-    public class SearchPathHandler :AbstractGlobberHandler, IRequestHandler<SearchPathArgs, EExitCode>
+    public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchPathArgs, EExitCode>
     {
         private readonly ILogger _logger;
 
@@ -21,7 +21,7 @@ namespace CLConsole
         public async Task<EExitCode> Handle(SearchPathArgs request, CancellationToken cancellationToken)
         {
             InitBasePathsFromPathEnvironmentVar(request);
-            LogPaths(request, this._logger);
+            LogArgs(request, this._logger);
 
             Globber globber = new Globber(request, Console.Out);
             await globber.ExecuteAsync();

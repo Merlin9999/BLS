@@ -15,7 +15,7 @@ namespace CLConsole
 
         public async Task<EExitCode> Handle(ListFilesArgs request, CancellationToken cancellationToken)
         {
-            LogPaths(request, this._logger);
+            LogArgs(request, this._logger);
 
             Globber globber = new Globber(request, Console.Out);
             await globber.ExecuteAsync();
