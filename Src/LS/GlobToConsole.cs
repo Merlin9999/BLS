@@ -8,7 +8,7 @@ using System.Security;
 
 namespace CLConsole;
 
-public class Globber
+public class GlobToConsole
 {
     private readonly IGlobberArgs _args;
     private readonly TextWriter _outputWriter;
@@ -22,7 +22,7 @@ public class Globber
     private bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this._args.BasePaths.Count() > 1;
     private bool CanOutputImmediately => this._canOutputImmediately ??= !this._args.Sort && (this._args.AllowDuplicates || this._args.BasePaths.Count() <= 1);
 
-    public Globber(IGlobberArgs args, TextWriter outputWriter)
+    public GlobToConsole(IGlobberArgs args, TextWriter outputWriter)
     {
         this._args = args;
         this._outputWriter = outputWriter;

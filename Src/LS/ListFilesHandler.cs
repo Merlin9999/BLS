@@ -17,8 +17,8 @@ namespace CLConsole
         {
             LogArgs(request, this._logger);
 
-            Globber globber = new Globber(request, Console.Out);
-            await globber.ExecuteAsync();
+            GlobToConsole globToConsole = new GlobToConsole(request, Console.Out);
+            await globToConsole.ExecuteAsync();
 
             return EExitCode.Success;
         }
