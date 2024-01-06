@@ -22,8 +22,8 @@ public class GlobToConsole
     public async Task ExecuteAsync()
     {
         var globber = new SystemGlobber(this._args);
-        IAsyncEnumerable<string> files = globber.ExecuteAsync();
-        await foreach (string file in files)
+        IEnumerable<string> files = globber.Execute();
+        foreach (string file in files)
             await this._outputWriter.WriteLineAsync(file);
 
         await this.OutputIgnoredExceptionsAsync(globber.IgnoredFileAccessExceptions.ToList());

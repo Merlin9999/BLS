@@ -9,5 +9,5 @@ namespace CLConsole;
 public interface IGlobber
 {
     IEnumerable<Exception> IgnoredFileAccessExceptions { get; }
-    IAsyncEnumerable<string> ExecuteAsync();
+    IEnumerable<string> Execute();
 }

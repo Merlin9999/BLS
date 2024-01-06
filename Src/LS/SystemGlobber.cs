@@ -14,9 +14,7 @@ public class SystemGlobber : AbstractGlobber
         this._matcher = CreateMatcher(this._args);
     }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    protected override async IAsyncEnumerable<string> FindMatchesImplAsync(string basePath, List<Exception> ignoredFileAccessExceptions)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    protected override IEnumerable<string> FindMatches(string basePath, List<Exception> ignoredFileAccessExceptions)
     {
         PatternMatchingResult files;
 

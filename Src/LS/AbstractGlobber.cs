@@ -16,7 +16,7 @@ public abstract class AbstractGlobber : IGlobber
     private bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this._args.BasePaths.Count() > 1;
     private bool CanOutputImmediately => this._canOutputImmediately ??= !this._args.Sort && (this._args.AllowDuplicatesWhenMultipleBasePaths || this._args.BasePaths.Count() <= 1);
 
-    public AbstractGlobber(IGlobberArgs args)
+    protected AbstractGlobber(IGlobberArgs args)
     {
         this._args = args;
     }
@@ -24,7 +24,7 @@ public abstract class AbstractGlobber : IGlobber
     public IEnumerable<Exception> IgnoredFileAccessExceptions => this.IgnoredExceptions;
     protected ImmutableList<Exception> IgnoredExceptions { get; set; } = ImmutableList<Exception>.Empty;
 
-    public async IAsyncEnumerable<string> ExecuteAsync()
+    public IEnumerable<string> Execute()
     {
         List<string> basePaths = this._args.BasePaths.ToList();
             
@@ -34,9 +34,9 @@ public abstract class AbstractGlobber : IGlobber
         {
             string basePath = basePaths.Count < 1 ? "./" : basePaths[0];
             var ignoredFileAccessExceptions = new List<Exception>();
-            IAsyncEnumerable<string> files = this.FindMatchesAsync(basePath, ignoredFileAccessExceptions);
-            files = this.OutputOrCacheFilesAsync(basePath, files);
-            await foreach (string file in files)
+            IEnumerable<string> files = this.FindMatches(basePath, ignoredFileAccessExceptions);
+            files = this.OutputOrCacheFiles(basePath, files);
+            foreach (string file in files)
                 yield return file;
             this.IgnoredExceptions = this.IgnoredExceptions.AddRange(ignoredFileAccessExceptions);
         }
@@ -45,9 +45,9 @@ public abstract class AbstractGlobber : IGlobber
             foreach (string basePath in basePaths)
             {
                 var ignoredFileAccessExceptions = new List<Exception>();
-                IAsyncEnumerable<string> files = this.FindMatchesAsync(basePath, ignoredFileAccessExceptions);
-                files =  this.OutputOrCacheFilesAsync(basePath, files);
-                await foreach (string file in files)
+                IEnumerable<string> files = this.FindMatches(basePath, ignoredFileAccessExceptions);
+                files =  this.OutputOrCacheFiles(basePath, files);
+                foreach (string file in files)
                     yield return file;
                 this.IgnoredExceptions = this.IgnoredExceptions.AddRange(ignoredFileAccessExceptions);
             }
@@ -57,37 +57,30 @@ public abstract class AbstractGlobber : IGlobber
         // and need to be output now.
         if (!this.CanOutputImmediately)
         {
-            List<string> files = this.GetCachedFilesAsync(basePaths);
+            List<string> files = this.GetCachedFiles(basePaths);
             foreach (string file in files) 
                 yield return file;
         }
     }
 
-    protected abstract IAsyncEnumerable<string> FindMatchesImplAsync(string basePath, List<Exception> ignoredFileAccessExceptions);
+    protected abstract IEnumerable<string> FindMatches(string basePath, List<Exception> ignoredFileAccessExceptions);
 
-    private async IAsyncEnumerable<string> FindMatchesAsync(string basePath, List<Exception> ignoredFileAccessExceptions)
-    {
-        IAsyncEnumerable<string> files = this.FindMatchesImplAsync(basePath, ignoredFileAccessExceptions);
-        await foreach (string file in files)
-            yield return file;
-    }
-
-    private async IAsyncEnumerable<string> OutputOrCacheFilesAsync(string basePath, IAsyncEnumerable<string> filePaths)
+    private IEnumerable<string> OutputOrCacheFiles(string basePath, IEnumerable<string> filePaths)
     {
         if (this.CanOutputImmediately)
         {
-            await foreach (string filePath in filePaths)
+            foreach (string filePath in filePaths)
                 yield return this.GetOutputPath(basePath, filePath);
         }
         else
         {
-            IEnumerable<string> allFiles = filePaths.ToBlockingEnumerable()
+            IEnumerable<string> allFiles = filePaths
                 .Select(filePath => this.GetOutputPath(basePath, filePath));
             this._fileCache = this._fileCache.AddRange(allFiles);
         }
     }
 
-    private List<string> GetCachedFilesAsync(List<string> basePaths)
+    private List<string> GetCachedFiles(List<string> basePaths)
     {
         StringComparer stringComparer = this._args.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
