@@ -34,6 +34,6 @@ public abstract class AbstractGlobberHandler
         logger.Debug($"AbortOnFileSystemAccessExceptions: {args.AbortOnFileSystemAccessExceptions}");
         logger.Debug($"                             Sort: {args.Sort}");
         logger.Debug($"                    CaseSensitive: {args.CaseSensitive}");
-        logger.Debug($"                  AllowDuplicates: {args.AllowDuplicates}");
+        logger.Debug($"                  AllowDuplicatesWhenMultipleBasePaths: {args.AllowDuplicatesWhenMultipleBasePaths}");
     }
 }

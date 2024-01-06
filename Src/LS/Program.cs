@@ -111,7 +111,7 @@ namespace CLConsole
         public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
         [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output.")]
-        public bool AllowDuplicates { get; set; }
+        public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
     }
 
     [Verb("search-path", isDefault: false, ["path"], HelpText = "Search Path")]
@@ -120,7 +120,7 @@ namespace CLConsole
         public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
         [Option('d', "allow-duplicates", Default = true, HelpText = "Toggle allowing duplicates if multiple base paths for faster output.")]
-        public bool AllowDuplicates { get; set; } = true;
+        public bool AllowDuplicatesWhenMultipleBasePaths { get; set; } = true;
     }
 
     public abstract class BaseArgs

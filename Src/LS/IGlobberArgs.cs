@@ -7,6 +7,6 @@ public interface IGlobberArgs
     IEnumerable<string> BasePaths { get; set; }
     bool CaseSensitive { get; set; }
     bool Sort { get; set; }
-    bool AllowDuplicates { get; set; }
+    bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
     bool AbortOnFileSystemAccessExceptions { get; set; }
 }
