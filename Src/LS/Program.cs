@@ -9,135 +9,134 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace CLConsole
+namespace CLConsole;
+
+public enum EExitCode
 {
-    public enum EExitCode
+    Success = 0,
+    Unknown = 1,
+    UnhandledException = 2,
+    InvalidApplicationArguments = 3,
+}
+
+internal abstract class Program
+{
+    private static readonly ServiceCollection Services = new();
+
+    static int Main(string[] args)
     {
-        Success = 0,
-        Unknown = 1,
-        UnhandledException = 2,
-        InvalidApplicationArguments = 3,
-    }
-
-    internal abstract class Program
-    {
-        private static readonly ServiceCollection Services = new();
-
-        static int Main(string[] args)
+        try
         {
-            try
-            {
-                EExitCode retValue = EExitCode.Unknown;
+            EExitCode retValue = EExitCode.Unknown;
 
-                if (args.Length == 0)
-                    args = ["--help"];
+            if (args.Length == 0)
+                args = ["--help"];
 
 
-                IMediator mediator = InitializeDI();
+            IMediator mediator = InitializeDI();
 
-                ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, SearchPathArgs>(args);
+            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, SearchPathArgs>(args);
 
-                //if (args.Length == 0)
-                //{
-                //    HelpText helpText = HelpText.AutoBuild(parserResult, Console.WindowWidth);
-                //    Console.WriteLine(helpText);
-                //    return (int)EExitCode.InvalidApplicationArguments;
-                //}
+            //if (args.Length == 0)
+            //{
+            //    HelpText helpText = HelpText.AutoBuild(parserResult, Console.WindowWidth);
+            //    Console.WriteLine(helpText);
+            //    return (int)EExitCode.InvalidApplicationArguments;
+            //}
 
-                retValue = parserResult.MapResult(
-                    (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
-                    (SearchPathArgs options) => AsyncContext.Run(() => AsyncMain(options)),
-                    (errors) => EExitCode.InvalidApplicationArguments);
+            retValue = parserResult.MapResult(
+                (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (SearchPathArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (errors) => EExitCode.InvalidApplicationArguments);
 
-                return (int)retValue;
-            }
-            catch (Exception exc)
-            {
-                Log.Error(exc, "Fatal error!");
-                return (int)EExitCode.UnhandledException;
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
+            return (int)retValue;
         }
-
-        static async Task<EExitCode> AsyncMain<TOptions>(TOptions options)
-            where TOptions : IRequest<EExitCode>
+        catch (Exception exc)
         {
-            try
-            {
-                IMediator mediator = InitializeDI();
-                return await mediator.Send(options);
-            }
-            catch (Exception exc)
-            {
-                Log.Error(exc, "Fatal error!");
-                return EExitCode.UnhandledException;
-            }
+            Log.Error(exc, "Fatal error!");
+            return (int)EExitCode.UnhandledException;
         }
-
-        private static IMediator InitializeDI()
+        finally
         {
-            Services.AddSingleton<IServiceCollection>(Services);
-            Services.AddSingleton<ILogger>(CreateLogger());
-            Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
-
-            //Log.Information("Logger initialized.");
-
-            ServiceProvider sp =Services.BuildServiceProvider(true);
-
-            return sp.GetService<IMediator>() 
-                ?? throw new InvalidOperationException($"Dependency Injection for {nameof(IMediator)} has not been properly setup!");
-        }
-
-        private static Logger CreateLogger()
-        {
-            Logger logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.Async(x => x.Console(restrictedToMinimumLevel: LogEventLevel.Warning))
-                .WriteTo.Async(x => x.Debug(restrictedToMinimumLevel: LogEventLevel.Verbose))
-                .CreateLogger();
-            Log.Logger = logger;
-
-            return logger;
+            Log.CloseAndFlush();
         }
     }
 
-    [Verb("list-files", isDefault: true, ["files"], HelpText = "List Files")]
-    public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberArgs
+    static async Task<EExitCode> AsyncMain<TOptions>(TOptions options)
+        where TOptions : IRequest<EExitCode>
     {
-        [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory.")]
-        public IEnumerable<string> BasePaths { get; set; } = new List<string>();
-
-        [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output.")]
-        public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
+        try
+        {
+            IMediator mediator = InitializeDI();
+            return await mediator.Send(options);
+        }
+        catch (Exception exc)
+        {
+            Log.Error(exc, "Fatal error!");
+            return EExitCode.UnhandledException;
+        }
     }
 
-    [Verb("search-path", isDefault: false, ["path"], HelpText = "Search Path")]
-    public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberArgs
+    private static IMediator InitializeDI()
     {
-        public IEnumerable<string> BasePaths { get; set; } = new List<string>();
+        Services.AddSingleton<IServiceCollection>(Services);
+        Services.AddSingleton<ILogger>(CreateLogger());
+        Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
-        [Option('d', "allow-duplicates", Default = true, HelpText = "Toggle allowing duplicates if multiple base paths for faster output.")]
-        public bool AllowDuplicatesWhenMultipleBasePaths { get; set; } = true;
+        //Log.Information("Logger initialized.");
+
+        ServiceProvider sp =Services.BuildServiceProvider(true);
+
+        return sp.GetService<IMediator>() 
+            ?? throw new InvalidOperationException($"Dependency Injection for {nameof(IMediator)} has not been properly setup!");
     }
 
-    public abstract class BaseArgs
+    private static Logger CreateLogger()
     {
-        [Value(0, HelpText = "Included Paths. At least 1 is required.")]
-        public IEnumerable<string> IncludeGlobPaths { get; set; } = new List<string>();
+        Logger logger = new LoggerConfiguration()
+            .MinimumLevel.Verbose()
+            .WriteTo.Async(x => x.Console(restrictedToMinimumLevel: LogEventLevel.Warning))
+            .WriteTo.Async(x => x.Debug(restrictedToMinimumLevel: LogEventLevel.Verbose))
+            .CreateLogger();
+        Log.Logger = logger;
 
-        [Option('x', "exclude", HelpText = "Excluded Paths (optional)")]
-        public IEnumerable<string> ExcludeGlobPaths { get; set; } = new List<string>();
-
-        [Option('c', "case-sensitive", Default = false, HelpText = "Toggle to add case sensitive path matching.")]
-        public bool CaseSensitive { get; set; }
-
-        [Option('s', "sort", Default = false, HelpText = "Toggle to sort.")]
-        public bool Sort { get; set; }
-
-        [Option('a', "abort-on-access-errors", Default = false, HelpText = "Toggle abort on file system access errors.")]
-        public bool AbortOnFileSystemAccessExceptions { get; set; }
+        return logger;
     }
+}
+
+[Verb("list-files", isDefault: true, ["files"], HelpText = "List Files")]
+public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberArgs
+{
+    [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory.")]
+    public IEnumerable<string> BasePaths { get; set; } = new List<string>();
+
+    [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output.")]
+    public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
+}
+
+[Verb("search-path", isDefault: false, ["path"], HelpText = "Search Path")]
+public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberArgs
+{
+    public IEnumerable<string> BasePaths { get; set; } = new List<string>();
+
+    [Option('d', "allow-duplicates", Default = true, HelpText = "Toggle allowing duplicates if multiple base paths for faster output.")]
+    public bool AllowDuplicatesWhenMultipleBasePaths { get; set; } = true;
+}
+
+public abstract class BaseArgs
+{
+    [Value(0, HelpText = "Included Paths. At least 1 is required.")]
+    public IEnumerable<string> IncludeGlobPaths { get; set; } = new List<string>();
+
+    [Option('x', "exclude", HelpText = "Excluded Paths (optional)")]
+    public IEnumerable<string> ExcludeGlobPaths { get; set; } = new List<string>();
+
+    [Option('c', "case-sensitive", Default = false, HelpText = "Toggle to add case sensitive path matching.")]
+    public bool CaseSensitive { get; set; }
+
+    [Option('s', "sort", Default = false, HelpText = "Toggle to sort.")]
+    public bool Sort { get; set; }
+
+    [Option('a', "abort-on-access-errors", Default = false, HelpText = "Toggle abort on file system access errors.")]
+    public bool AbortOnFileSystemAccessExceptions { get; set; }
 }

@@ -7,32 +7,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CLConsole
+namespace CLConsole;
+
+public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchPathArgs, EExitCode>
 {
-    public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchPathArgs, EExitCode>
+    private readonly ILogger _logger;
+
+    public SearchPathHandler(ILogger logger)
     {
-        private readonly ILogger _logger;
+        this._logger = logger;
+    }
 
-        public SearchPathHandler(ILogger logger)
-        {
-            this._logger = logger;
-        }
+    public async Task<EExitCode> Handle(SearchPathArgs request, CancellationToken cancellationToken)
+    {
+        InitBasePathsFromPathEnvironmentVar(request);
+        LogArgs(request, this._logger);
 
-        public async Task<EExitCode> Handle(SearchPathArgs request, CancellationToken cancellationToken)
-        {
-            InitBasePathsFromPathEnvironmentVar(request);
-            LogArgs(request, this._logger);
+        GlobToConsole globToConsole = new GlobToConsole(request, Console.Out);
+        await globToConsole.ExecuteAsync();
 
-            GlobToConsole globToConsole = new GlobToConsole(request, Console.Out);
-            await globToConsole.ExecuteAsync();
+        return EExitCode.Success;
+    }
 
-            return EExitCode.Success;
-        }
-
-        private static void InitBasePathsFromPathEnvironmentVar(SearchPathArgs request)
-        {
-            string? envPath = Environment.GetEnvironmentVariable("PATH");
-            request.BasePaths = envPath?.Split(Path.PathSeparator).ToList() ?? [];
-        }
+    private static void InitBasePathsFromPathEnvironmentVar(SearchPathArgs request)
+    {
+        string? envPath = Environment.GetEnvironmentVariable("PATH");
+        request.BasePaths = envPath?.Split(Path.PathSeparator).ToList() ?? [];
     }
 }
