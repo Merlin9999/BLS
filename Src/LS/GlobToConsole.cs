@@ -10,10 +10,10 @@ namespace CLConsole;
 
 public class GlobToConsole
 {
-    private readonly IGlobberArgs _args;
+    private readonly IGlobberAndFactoryArgs _args;
     private readonly TextWriter _outputWriter;
 
-    public GlobToConsole(IGlobberArgs args, TextWriter outputWriter)
+    public GlobToConsole(IGlobberAndFactoryArgs args, TextWriter outputWriter)
     {
         this._args = args;
         this._outputWriter = outputWriter;
@@ -21,7 +21,8 @@ public class GlobToConsole
 
     public async Task ExecuteAsync()
     {
-        var globber = new ImprovedGlobber(this._args);
+        IGlobber globber = GlobberFactory.Create(this._args);
+
         IEnumerable<string> files = globber.Execute();
         foreach (string file in files)
             await this._outputWriter.WriteLineAsync(file);
@@ -45,8 +46,4 @@ public class GlobToConsole
             return exc;
         }
     }
-
-
-
-
 }

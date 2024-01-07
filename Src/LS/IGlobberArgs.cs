@@ -1,5 +1,9 @@
 ﻿namespace CLConsole;
 
+public interface IGlobberAndFactoryArgs : IGlobberArgs, IGlobberFactoryArgs
+{
+}
+
 public interface IGlobberArgs
 {
     IEnumerable<string> IncludeGlobPaths { get; set; }
@@ -9,4 +13,9 @@ public interface IGlobberArgs
     bool Sort { get; set; }
     bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
     bool AbortOnFileSystemAccessExceptions { get; set; }
+}
+
+public interface IGlobberFactoryArgs
+{
+    bool UseFrameworkGlobber { get; set; }
 }
