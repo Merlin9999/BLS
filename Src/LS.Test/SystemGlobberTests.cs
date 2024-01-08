@@ -11,7 +11,7 @@ namespace LS.Test
             get
             {
                 yield return new object[] { (IGlobberArgs args) => new SystemGlobber(args) };
-                //yield return new object[] { (IGlobberArgs args) => new ImprovedGlobber(args) };
+                yield return new object[] { (IGlobberArgs args) => new ImprovedGlobber(args) };
             }
         }
 
@@ -221,7 +221,7 @@ namespace LS.Test
         [MemberData(nameof(AllGlobberFactoryMethods))]
         public void FindAllFilesWithSameExtension(Func<IGlobberArgs, IGlobber> globberFactory)
         {
-            string includeGlob = "**.txt";
+            string includeGlob = "**/*.txt";
             string[] expected = new[]
             {
                 "FolderLevel1.txt",
