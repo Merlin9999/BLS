@@ -137,6 +137,72 @@ namespace LS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
+        public void FindAllFilesExcludingAFolder(Func<IGlobberArgs, IGlobber> globberFactory)
+        {
+            string includeGlob = "**/*";
+            string excludeGlob = "SubFolder2/SubSubFolder2";
+            string[] expected = new[]
+            {
+                "FolderLevel1.txt",
+                "FolderLevel1.md",
+                "FolderLevel1_DifferentBaseName.txt",
+                "SubFolder1/SubFolder1_FolderLevel2.txt",
+                "SubFolder1/SubFolder1_FolderLevel2.md",
+                "SubFolder2/SubFolder2_FolderLevel2.txt",
+                "SubFolder2/SubFolder2_FolderLevel2.md",
+                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
+                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
+            };
+
+            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
+        }
+
+        [Theory]
+        [MemberData(nameof(AllGlobberFactoryMethods))]
+        public void FindAllFilesExcludingAFoldersFiles(Func<IGlobberArgs, IGlobber> globberFactory)
+        {
+            string includeGlob = "**/*";
+            string excludeGlob = "SubFolder2/SubSubFolder2/**";
+            string[] expected = new[]
+            {
+                "FolderLevel1.txt",
+                "FolderLevel1.md",
+                "FolderLevel1_DifferentBaseName.txt",
+                "SubFolder1/SubFolder1_FolderLevel2.txt",
+                "SubFolder1/SubFolder1_FolderLevel2.md",
+                "SubFolder2/SubFolder2_FolderLevel2.txt",
+                "SubFolder2/SubFolder2_FolderLevel2.md",
+                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
+                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
+            };
+
+            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
+        }
+
+        [Theory]
+        [MemberData(nameof(AllGlobberFactoryMethods))]
+        public void FindAllFilesExcludingAFoldersFilesWithChildFolders(Func<IGlobberArgs, IGlobber> globberFactory)
+        {
+            string includeGlob = "**/*";
+            string excludeGlob = "SubFolder2/**";
+            string[] expected = new[]
+            {
+                "FolderLevel1.txt",
+                "FolderLevel1.md",
+                "FolderLevel1_DifferentBaseName.txt",
+                "SubFolder1/SubFolder1_FolderLevel2.txt",
+                "SubFolder1/SubFolder1_FolderLevel2.md",
+                //"SubFolder2/SubFolder2_FolderLevel2.txt",
+                //"SubFolder2/SubFolder2_FolderLevel2.md",
+                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
+                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
+            };
+
+            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
+        }
+
+        [Theory]
+        [MemberData(nameof(AllGlobberFactoryMethods))]
         public void FindAllFilesUsingSubfolderAsBase(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "../**/*";
@@ -234,8 +300,6 @@ namespace LS.Test
 
             ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
-
-         // TODO: Exclude whole folder test
 
         private static void ExecuteGlobWithSingleInclude(Func<IGlobberArgs, IGlobber> globberFactoryMethod,
             IEnumerable<string> expected, string basePath, string includeGlob, string? excludeGlob = null)

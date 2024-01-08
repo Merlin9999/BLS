@@ -35,30 +35,28 @@ public class ImprovedGlobber : AbstractGlobber
 
         DirectoryInfo baseDir = new DirectoryInfo(normalizedBasePath);
         DirectoryInfo rootDir = this.DetermineRootPathFromBasePathAndIncludes(baseDir, stringComparer);
-        
+
         ImmutableList<Glob> includeGlobs = this._args.IncludeGlobPaths
-            .Select(g => Path.GetRelativePath(baseDir.FullName, Path.Combine(baseDir.FullName, g)))
+            .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), rootDir, baseDir))
             .Select(g => Glob.Parse(g))
             .ToImmutableList();
 
         ImmutableList<Glob> excludeGlobs = this._args.ExcludeGlobPaths
-            .Select(g => Path.GetRelativePath(baseDir.FullName, Path.Combine(baseDir.FullName, g)))
+            .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), rootDir, baseDir))
             .Select(g => Glob.Parse(g))
             .ToImmutableList();
 
-        foreach (FileInfo fileInfo in this.EnumerateAllFiles(rootDir, excludeGlobs, ignoredFileAccessExceptions))
+        foreach (FileInfo fileInfo in this.EnumerateAllFiles(rootDir, excludeGlobs, rootDir, baseDir, ignoredFileAccessExceptions))
         {
-            string fileName = Path.GetRelativePath(rootDir.FullName, fileInfo.FullName);
-            string prefix = Path.GetRelativePath(baseDir.FullName, rootDir.FullName);
-            if (prefix != ".")
-                fileName = Path.Combine(prefix, fileName);
+            string fileName = BuildRelativeFileName(fileInfo.FullName, rootDir, baseDir);
 
             if (includeGlobs.Any(glob => glob.IsMatch(fileName)) && !excludeGlobs.Any(glob => glob.IsMatch(fileName)))
                 yield return this.ToForwardSlashPathSeparators(fileName);
         }
     }
-    
-    private IEnumerable<FileInfo> EnumerateAllFiles(DirectoryInfo dirInfo, ImmutableList<Glob> excludeGlobs, List<Exception> ignoredFileAccessExceptions)
+
+    private IEnumerable<FileInfo> EnumerateAllFiles(DirectoryInfo dirInfo, ImmutableList<Glob> excludeGlobs, 
+        DirectoryInfo rootDir, DirectoryInfo baseDir, List<Exception> ignoredFileAccessExceptions)
     {
         ImmutableList<FileInfo> files = this.DoFileSysOp(
             () => dirInfo.EnumerateFiles().ToImmutableList(),
@@ -75,14 +73,25 @@ public class ImprovedGlobber : AbstractGlobber
 
         foreach (DirectoryInfo subDirInfo in subDirInfos)
         {
-            if (excludeGlobs.Any(glob => glob.IsMatch(subDirInfo.FullName)))
+            string fullFolderNamePath = BuildRelativeFileName(subDirInfo.FullName, rootDir, baseDir);
+
+            if (excludeGlobs.Any(glob => glob.IsMatch(fullFolderNamePath)))
                 continue;
 
-            foreach (FileInfo fileInfo in this.EnumerateAllFiles(subDirInfo, excludeGlobs, ignoredFileAccessExceptions))
+            foreach (FileInfo fileInfo in this.EnumerateAllFiles(subDirInfo, excludeGlobs, rootDir, baseDir, ignoredFileAccessExceptions))
                 yield return fileInfo;
         }
     }
-    
+
+    private static string BuildRelativeFileName(string fullFileNamePath, DirectoryInfo rootDir, DirectoryInfo baseDir)
+    {
+        string relativeFileName = Path.GetRelativePath(rootDir.FullName, fullFileNamePath);
+        string prefix = Path.GetRelativePath(baseDir.FullName, rootDir.FullName);
+        if (prefix != ".")
+            relativeFileName = Path.Combine(prefix, relativeFileName);
+        return relativeFileName;
+    }
+
     private T DoFileSysOp<T>(Func<T> operation, Func<T> getDefault, List<Exception> ignoredFileAccessExceptions)
     {
         try
