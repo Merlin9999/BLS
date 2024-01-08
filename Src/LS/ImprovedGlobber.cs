@@ -2,6 +2,7 @@
 using System.IO;
 using System.Security;
 using DotNet.Globbing;
+using static System.Net.WebRequestMethods;
 
 namespace CLConsole;
 
@@ -20,44 +21,37 @@ public class ImprovedGlobber : AbstractGlobber
 
     protected override IEnumerable<string> FindMatches(string basePath, List<Exception> ignoredFileAccessExceptions)
     {
+        StringComparer stringComparer = this._args.CaseSensitive 
+            ? StringComparer.InvariantCulture 
+            : StringComparer.InvariantCultureIgnoreCase;
+
         foreach (string globPath in this._args.IncludeGlobPaths) 
             this.VerifyPathIsNotRooted(globPath);
 
         foreach (string globPath in this._args.ExcludeGlobPaths)
             this.VerifyPathIsNotRooted(globPath);
 
-        ImmutableList<Glob> includeGlobs = this._args.IncludeGlobPaths.Select(g => Glob.Parse(g)).ToImmutableList();
-        ImmutableList<Glob> excludeGlobs = this._args.ExcludeGlobPaths.Select(g => Glob.Parse(g)).ToImmutableList();
-
         string normalizedBasePath = this.NormalizePathSeparators(basePath);
 
-        var baseDir = new DirectoryInfo(normalizedBasePath);
-        var rootDir = baseDir;
-
-        string? leadingDotPathFromIncludes = includeGlobs
-            .Select(glob => this.GetLeadingDotDotPaths(glob.ToString()))
-            .Distinct()
-            .SingleOrDefault();
-
-        StringComparer stringComparer = this._args.CaseSensitive ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase;
-        string? adjustedRootDir = leadingDotPathFromIncludes == null
-            ? null
-            : Path.GetFullPath(Path.Combine(baseDir.FullName, leadingDotPathFromIncludes));
-
-        if (adjustedRootDir != null)
-            rootDir = new DirectoryInfo(adjustedRootDir);
-
-        ImmutableList<Glob> adjustedExcludePaths = leadingDotPathFromIncludes == null
-            ? excludeGlobs
-            : this.LeftTrimPathsIfAllMatchPathValueToLTrim(leadingDotPathFromIncludes, this._args.ExcludeGlobPaths.ToImmutableList(), stringComparer)
-                .Select(g => Glob.Parse(g))
-                .ToImmutableList();
+        DirectoryInfo baseDir = new DirectoryInfo(normalizedBasePath);
+        DirectoryInfo rootDir = this.DetermineRootPathFromBasePathAndIncludes(baseDir, stringComparer);
         
-        foreach (FileInfo fileInfo in this.EnumerateAllFiles(rootDir, adjustedExcludePaths, ignoredFileAccessExceptions))
+        ImmutableList<Glob> includeGlobs = this._args.IncludeGlobPaths
+            .Select(g => Path.GetRelativePath(baseDir.FullName, Path.Combine(baseDir.FullName, g)))
+            .Select(g => Glob.Parse(g))
+            .ToImmutableList();
+
+        ImmutableList<Glob> excludeGlobs = this._args.ExcludeGlobPaths
+            .Select(g => Path.GetRelativePath(baseDir.FullName, Path.Combine(baseDir.FullName, g)))
+            .Select(g => Glob.Parse(g))
+            .ToImmutableList();
+
+        foreach (FileInfo fileInfo in this.EnumerateAllFiles(rootDir, excludeGlobs, ignoredFileAccessExceptions))
         {
             string fileName = Path.GetRelativePath(rootDir.FullName, fileInfo.FullName);
-            if (leadingDotPathFromIncludes != null)
-                fileName = Path.Combine(leadingDotPathFromIncludes, fileName);
+            string prefix = Path.GetRelativePath(baseDir.FullName, rootDir.FullName);
+            if (prefix != ".")
+                fileName = Path.Combine(prefix, fileName);
 
             if (includeGlobs.Any(glob => glob.IsMatch(fileName)) && !excludeGlobs.Any(glob => glob.IsMatch(fileName)))
                 yield return this.ToForwardSlashPathSeparators(fileName);
@@ -123,50 +117,70 @@ public class ImprovedGlobber : AbstractGlobber
             throw new ArgumentException($"Glob path cannot be rooted! Path: \"{path}\"");
     }
 
-    private string GetPathTrailingDotDotPaths(string path)
+    private (string RelativePrefix, string RelativePath) SplitPathByParentPrefix(string path)
     {
-        string normalizedPath = this.NormalizePathSeparators(path);
-        string[] segments = normalizedPath.Split('\\', StringSplitOptions.RemoveEmptyEntries);
-        return Path.Combine(segments.SkipWhile(s => s == ".." || s == ".").ToArray());
+        var segments = this.SplitPathIntoSegments(path);
+        return SplitPathByParentPrefix(path, segments);
     }
 
-    private ImmutableList<string> LeftTrimPathsIfAllMatchPathValueToLTrim(string pathValueToLTrim, ImmutableList<string> pathsToRemoveFrom, StringComparer stringComparer)
+    private static (string RelativePrefix, string RelativePath) SplitPathByParentPrefix(string[] segments)
     {
-        pathValueToLTrim = this.NormalizePathSeparators(pathValueToLTrim);
-        string[] segmentsToRemove = pathValueToLTrim.Split('\\', StringSplitOptions.RemoveEmptyEntries);
+        string path = Path.Combine(segments);
+        return SplitPathByParentPrefix(path, segments);
+    }
 
-        if (!segmentsToRemove.Any())
-            return pathsToRemoveFrom;
+    private static (string RelativePrefix, string RelativePath) SplitPathByParentPrefix(string path, string[] segments)
+    {
+        int index = GetIndexOfLastSpecialFolder(segments);
+        if (index < 0)
+            return (string.Empty, path);
 
-        ImmutableList<string[]> pathsToRemoveInSegments = pathsToRemoveFrom
-            .Select(p =>
-            {
-                string normalizedPath = this.NormalizePathSeparators(p);
-                return normalizedPath.Split('\\', StringSplitOptions.RemoveEmptyEntries);
-            }).ToImmutableList();
+        return (Path.Combine(segments.Take(index + 1).ToArray()),
+            Path.Combine(segments.Skip(index + 1).ToArray()));
 
-        var adjustedPaths = new List<string>();
-
-        foreach (string[] pathSegmentsToLTrimFrom in pathsToRemoveInSegments)
+        int GetIndexOfLastSpecialFolder(string[] strings)
         {
-            if (pathSegmentsToLTrimFrom.Length <= segmentsToRemove.Length)
-                return pathsToRemoveFrom;
+            for (int i = segments.Length - 1; i >= 0; i--)
+            {
+                string segment = segments[i];
+                if (segment == ".." || segment == ".")
+                    return i;
+            }
 
-            for (int i = 0; i < segmentsToRemove.Length; i++)
-                if (pathSegmentsToLTrimFrom[i] != segmentsToRemove[i])
-                    return pathsToRemoveFrom;
-
-            adjustedPaths.Add(Path.Combine(pathSegmentsToLTrimFrom.Skip(segmentsToRemove.Length).ToArray()));
+            return -1;
         }
-
-        return adjustedPaths.ToImmutableList();
     }
 
-    private string GetLeadingDotDotPaths(string path)
+    private string[] SplitPathIntoSegments(string path)
     {
         string normalizedPath = this.NormalizePathSeparators(path);
         string[] segments = normalizedPath.Split('\\', StringSplitOptions.RemoveEmptyEntries);
-        return Path.Combine(segments.TakeWhile(s => s == ".." || s == ".").ToArray());
+        return segments;
+    }
+
+    private DirectoryInfo DetermineRootPathFromBasePathAndIncludes(DirectoryInfo basePath, StringComparer comparer)
+    {
+        var rootDirectoryList = this._args.IncludeGlobPaths
+            .Select(p => new { Path = p, RelativePathPrefix = Path.Combine(this.SplitPathByParentPrefix(p).RelativePrefix) })
+            .Where(x => x.RelativePathPrefix.Length > 0)
+            .Select(x => new DirectoryInfo(Path.GetFullPath(Path.Combine(basePath.FullName, x.RelativePathPrefix))))
+            .Prepend(basePath)
+            .ToImmutableList();
+
+        var rootPathSegmentsList = rootDirectoryList
+            .Select(di => this.SplitPathIntoSegments(di.FullName))
+            .ToImmutableList();
+
+        int minTotalSegments = rootPathSegmentsList
+            .Select(x => x.Length)
+            .Min();
+
+        var matchingPathSegments = Enumerable.Range(1, minTotalSegments)
+            .Reverse()
+            .Select(x => rootPathSegmentsList.First().Take(x).ToImmutableList())
+            .Where(pathSegsToMatch => rootPathSegmentsList.All(pathSegs => pathSegs.StartsWith(pathSegsToMatch, comparer)));
+
+        return new DirectoryInfo(Path.Combine(matchingPathSegments.First().ToArray()));
     }
 
     private string NormalizePathSeparators(string path)
