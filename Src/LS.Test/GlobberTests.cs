@@ -4,7 +4,7 @@ using FluentAssertions;
 
 namespace LS.Test
 {
-    public class SystemGlobberTests
+    public class GlobberTests
     {
         public static IEnumerable<object[]> AllGlobberFactoryMethods
         {
@@ -12,6 +12,7 @@ namespace LS.Test
             {
                 yield return new object[] { (IGlobberArgs args) => new SystemGlobber(args) };
                 yield return new object[] { (IGlobberArgs args) => new ImprovedGlobber(args) };
+                //yield break;
             }
         }
 
@@ -19,8 +20,8 @@ namespace LS.Test
         {
             get
             {
-                //yield return new object[] { (IGlobberArgs args) => new ImprovedGlobber(args) };
-                yield break;
+                yield return new object[] { (IGlobberArgs args) => new ImprovedGlobber(args) };
+                //yield break;
             }
         }
 
@@ -240,8 +241,8 @@ namespace LS.Test
         }
 
         [Theory]
-        [MemberData(nameof(AllGlobberFactoryMethods))]
-        //[MemberData(nameof(GlobberFactoryMethodsExcludingSystemGlobber))]
+        //[MemberData(nameof(AllGlobberFactoryMethods))]
+        [MemberData(nameof(GlobberFactoryMethodsExcludingSystemGlobber))]
         public void FindAllFilesUsingSubfolderAsBaseNonRelativeExcludingTxtFromBase(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             // SystemGlobber does NOT handle this properly as it end up including ALL files
