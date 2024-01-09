@@ -36,17 +36,22 @@ public class ImprovedGlobber : AbstractGlobber
         DirectoryInfo baseDir = new DirectoryInfo(normalizedBasePath);
         DirectoryInfo rootDir = this.DetermineRootPathFromBasePathAndIncludes(baseDir, stringComparer);
 
-        ImmutableList<Glob> includeGlobs = this._args.IncludeGlobPaths
+        var includeGlobInfos = this._args.IncludeGlobPaths
             .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), rootDir, baseDir))
-            .Select(g => Glob.Parse(g))
+            .Select(g => new {Path = g, Glob = Glob.Parse(g) })
             .ToImmutableList();
 
+        ImmutableList<Glob> includeGlobs = includeGlobInfos.Select(x => x.Glob).ToImmutableList();
+        ImmutableList<string> includePaths = includeGlobInfos.Select(x => x.Path).ToImmutableList();
+        int minLevel = includePaths.Min(path => CalculateFolderSegmentCount(path));
+        int maxLevel = minLevel < 0 ? -1 : includePaths.Max(path => CalculateFolderSegmentCount(path));
+        
         ImmutableList<Glob> excludeGlobs = this._args.ExcludeGlobPaths
             .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), rootDir, baseDir))
             .Select(g => Glob.Parse(g))
             .ToImmutableList();
 
-        foreach (FileInfo fileInfo in this.EnumerateAllFiles(rootDir, excludeGlobs, rootDir, baseDir, ignoredFileAccessExceptions))
+        foreach (FileInfo fileInfo in this.EnumerateAllFiles(1, maxLevel,rootDir, excludeGlobs, rootDir, baseDir, ignoredFileAccessExceptions))
         {
             string fileName = BuildRelativeFileName(fileInfo.FullName, rootDir, baseDir);
 
@@ -55,9 +60,12 @@ public class ImprovedGlobber : AbstractGlobber
         }
     }
 
-    private IEnumerable<FileInfo> EnumerateAllFiles(DirectoryInfo dirInfo, ImmutableList<Glob> excludeGlobs, 
+    private IEnumerable<FileInfo> EnumerateAllFiles(int level, int maxLevel, DirectoryInfo dirInfo, ImmutableList<Glob> excludeGlobs, 
         DirectoryInfo rootDir, DirectoryInfo baseDir, List<Exception> ignoredFileAccessExceptions)
     {
+        if (maxLevel > 0 && level > maxLevel)
+            yield break;
+
         ImmutableList<FileInfo> files = this.DoFileSysOp(
             () => dirInfo.EnumerateFiles().ToImmutableList(),
             () => ImmutableList<FileInfo>.Empty,
@@ -78,7 +86,7 @@ public class ImprovedGlobber : AbstractGlobber
             if (excludeGlobs.Any(glob => glob.IsMatch(fullFolderNamePath)))
                 continue;
 
-            foreach (FileInfo fileInfo in this.EnumerateAllFiles(subDirInfo, excludeGlobs, rootDir, baseDir, ignoredFileAccessExceptions))
+            foreach (FileInfo fileInfo in this.EnumerateAllFiles(level + 1, maxLevel, subDirInfo, excludeGlobs, rootDir, baseDir, ignoredFileAccessExceptions))
                 yield return fileInfo;
         }
     }
@@ -90,6 +98,24 @@ public class ImprovedGlobber : AbstractGlobber
         if (prefix != ".")
             relativeFileName = Path.Combine(prefix, relativeFileName);
         return relativeFileName;
+    }
+
+    public static int CalculateFolderSegmentCount(string path)
+    {
+        if (path.IndexOf("**", StringComparison.Ordinal) >= 0)
+            return -1;
+
+        ImmutableList<string> pathSegments = path.Split('/', '\\')
+            .Where(s => s.Trim() != string.Empty)
+            .ToImmutableList();
+
+        int periodCount = pathSegments.Count(s => s == ".");
+        int dblPeriodCount = pathSegments.Count(s => s == "..");
+
+        int retVal = pathSegments.Count - (2 * dblPeriodCount) - periodCount;
+        if (retVal < 0)
+            return -1;
+        return retVal;
     }
 
     private T DoFileSysOp<T>(Func<T> operation, Func<T> getDefault, List<Exception> ignoredFileAccessExceptions)

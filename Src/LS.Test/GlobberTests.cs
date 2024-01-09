@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using CLConsole;
+using DotNet.Globbing;
 using FluentAssertions;
 
 namespace LS.Test
@@ -32,7 +33,7 @@ namespace LS.Test
             string includeGlob = "FolderLevel1.txt";
             string[] expected = new[] { includeGlob };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
 
         [Theory]
@@ -42,7 +43,7 @@ namespace LS.Test
             string includeGlob = "../FolderLevel1.txt";
             string[] expected = new[] { includeGlob };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles/SubFolder1", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles/SubFolder1", includeGlob);
         }
 
         [Theory]
@@ -52,7 +53,7 @@ namespace LS.Test
             string includeGlob = "DoesNotExist.txt";
             string[] expected = new string[] { };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
 
         [Theory]
@@ -67,7 +68,7 @@ namespace LS.Test
                 "FolderLevel1_DifferentBaseName.txt",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
 
         [Theory]
@@ -81,7 +82,7 @@ namespace LS.Test
                 "FolderLevel1.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
 
         [Theory]
@@ -95,7 +96,18 @@ namespace LS.Test
                 "FolderLevel1_DifferentBaseName.txt",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
+        }
+
+        [Fact]
+        public void FindAllFilesInTheWindowsFolderWithSameExtension()
+        {
+            string includeGlob = "*.exe";
+            
+            ImmutableList<string> systemGlobResults = ExecuteGlob(args => new SystemGlobber(args), @"C:\Windows", includeGlob);
+            ImmutableList<string> improvedGlobResults = ExecuteGlob(args => new ImprovedGlobber(args), @"C:\Windows", includeGlob);
+
+            systemGlobResults.Should().BeEquivalentTo(improvedGlobResults);
         }
 
         [Theory]
@@ -116,7 +128,7 @@ namespace LS.Test
                 "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
 
         [Theory]
@@ -133,7 +145,7 @@ namespace LS.Test
                 "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
         }
 
         [Theory]
@@ -155,7 +167,7 @@ namespace LS.Test
                 //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
         }
 
         [Theory]
@@ -177,7 +189,7 @@ namespace LS.Test
                 //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
         }
 
         [Theory]
@@ -199,7 +211,7 @@ namespace LS.Test
                 //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
         }
 
         [Theory]
@@ -220,7 +232,7 @@ namespace LS.Test
                 "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob);
         }
 
         [Theory]
@@ -237,7 +249,7 @@ namespace LS.Test
                 "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob, excludeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob, excludeGlob);
         }
 
         [Theory]
@@ -260,7 +272,7 @@ namespace LS.Test
                 "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob, excludeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob, excludeGlob);
         }
 
         [Theory]
@@ -281,10 +293,9 @@ namespace LS.Test
                 "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
-
-
+        
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
         public void FindAllFilesWithSameExtension(Func<IGlobberArgs, IGlobber> globberFactory)
@@ -299,23 +310,61 @@ namespace LS.Test
                 "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
             };
 
-            ExecuteGlobWithSingleInclude(globberFactory, expected, "GlobTestFiles", includeGlob);
+            ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
 
-        private static void ExecuteGlobWithSingleInclude(Func<IGlobberArgs, IGlobber> globberFactoryMethod,
+        [Fact]
+        public void CalculateFolderSegmentCountTests()
+        {
+            var paths = new (string Path, int ExpectedSegmentCount)[]
+            {
+                ("", 0),
+                ("ZZZ", 1),
+                ("Z/Z/Z", 3),
+                ("Z*/*Z/*Z*", 3),
+                ("Z/Z**/Z", -1),
+                ("Z/**/Z", -1),
+                ("**", -1),
+                ("Z/./Z", 2),
+                ("Z/../Z", 1),
+                ("Z/*/Z", 3),
+                ("Z/**/Z", -1),
+                ("*A/**B/folderC/D*.txt", -1),
+                ("*A/*B/folderC/D*.txt", 4),
+                ("../..", -1),
+            };
+
+            foreach ((string Path, int ExpectedSegmentCount) x in paths)
+            {
+                int actual = ImprovedGlobber.CalculateFolderSegmentCount(x.Path);
+                int expected = x.ExpectedSegmentCount;
+                expected.Should().Be(actual);
+            }
+        }
+
+        private static void ExecuteGlobAndValidate(Func<IGlobberArgs, IGlobber> globberFactoryMethod,
             IEnumerable<string> expected, string basePath, string includeGlob, string? excludeGlob = null)
         {
-            IGlobberArgs args = new GlobberTestArgs()
+            ImmutableList<string> results = ExecuteGlob(globberFactoryMethod, basePath, includeGlob, excludeGlob);
+            results.Should().BeEquivalentTo(expected);
+        }
+
+        private static ImmutableList<string> ExecuteGlob(Func<IGlobberArgs, IGlobber> globberFactoryMethod,
+            string basePath, string includeGlob, string? excludeGlob = null, Func<GlobberTestArgs, GlobberTestArgs>? updateArgsFunc = null)
+        {
+            var args = new GlobberTestArgs()
             {
                 BasePaths = new[] { basePath },
                 IncludeGlobPaths = new[] { includeGlob },
                 ExcludeGlobPaths = excludeGlob == null ? new string[] { } : new[] { excludeGlob },
             };
+
+            if (updateArgsFunc != null)
+                args = updateArgsFunc(args);
+
             IGlobber globber = globberFactoryMethod(args);
 
-            ImmutableList<string> results = globber.Execute().ToImmutableList();
-
-            results.Should().BeEquivalentTo(expected);
+            return globber.Execute().ToImmutableList();
         }
     }
 }
