@@ -34,6 +34,10 @@
     "LS - Users - Exceptions": {
       "commandName": "Project",
       "commandLineArgs": "**\\* -b c:\\Users"
+    },
+    "LS - C:\\": {
+      "commandName": "Project",
+      "commandLineArgs": "* -b c:\\"
     }
   }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.IO;
 using System.Security;
+using System.Text.RegularExpressions;
 using DotNet.Globbing;
 using static System.Net.WebRequestMethods;
 
@@ -13,7 +14,9 @@ public class ImprovedGlobber : AbstractGlobber
 
     private bool? _doPathSeparatorReplace;
     private bool DoPathSeparatorReplace => this._doPathSeparatorReplace ??= Path.DirectorySeparatorChar == '\\' && Path.AltDirectorySeparatorChar == '/';
-    
+
+    private static readonly Regex DriveOnlyRegex = new Regex("^[a-zA-Z][:]$");
+
     public ImprovedGlobber(IGlobberArgs args) 
         : base(args)
     {
@@ -215,7 +218,11 @@ public class ImprovedGlobber : AbstractGlobber
             .Select(x => rootPathSegmentsList.First().Take(x).ToImmutableList())
             .Where(pathSegsToMatch => rootPathSegmentsList.All(pathSegs => pathSegs.StartsWith(pathSegsToMatch, comparer)));
 
-        return new DirectoryInfo(Path.Combine(matchingPathSegments.First().ToArray()));
+        string rootPath = Path.Combine(matchingPathSegments.First().ToArray());
+        if (DriveOnlyRegex.IsMatch(rootPath))
+            rootPath = rootPath + '\\';
+
+        return new DirectoryInfo(rootPath);
     }
 
     private string NormalizePathSeparators(string path)
