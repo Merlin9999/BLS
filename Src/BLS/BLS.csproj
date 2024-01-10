@@ -12,6 +12,7 @@
     <Title>Beyond LS</Title>
     <Authors>Marc Behnke</Authors>
     <PackAsTool>False</PackAsTool>
+    <AssemblyName>bls</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
