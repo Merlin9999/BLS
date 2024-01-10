@@ -8,6 +8,10 @@
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
     <Copyright>Copyright (c) 2024 Marc Behnke</Copyright>
+    <PackageId>Beyond.LS</PackageId>
+    <Title>Beyond LS</Title>
+    <Authors>Marc Behnke</Authors>
+    <PackAsTool>False</PackAsTool>
   </PropertyGroup>
 
   <ItemGroup>

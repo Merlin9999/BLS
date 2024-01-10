@@ -20,35 +20,32 @@ public abstract class AbstractGlobber : IGlobber
         this.Args = args;
     }
 
-    public IEnumerable<Exception> IgnoredFileAccessExceptions => this.IgnoredExceptions;
-    protected ImmutableList<Exception> IgnoredExceptions { get; set; } = ImmutableList<Exception>.Empty;
+    public IEnumerable<Exception> IgnoredFileAccessExceptions => this.IgnoredExceptions.Exceptions;
+    protected IgnoredExceptionSet IgnoredExceptions { get; private set; } = new IgnoredExceptionSet();
 
     public IEnumerable<string> Execute()
     {
         List<string> basePaths = this.Args.BasePaths.ToList();
-            
-        this.IgnoredExceptions = ImmutableList<Exception>.Empty;
+
+        this.IgnoredExceptions = new IgnoredExceptionSet();
 
         if (basePaths.Count < 2)
         {
             string basePath = basePaths.Count < 1 ? "./" : basePaths[0];
-            var ignoredFileAccessExceptions = new List<Exception>();
-            IEnumerable<string> files = this.FindMatches(basePath, ignoredFileAccessExceptions);
+            IEnumerable<string> files = this.FindMatches(basePath, this.IgnoredExceptions);
             files = this.OutputOrCacheFiles(basePath, files);
             foreach (string file in files)
                 yield return file;
-            this.IgnoredExceptions = this.IgnoredExceptions.AddRange(ignoredFileAccessExceptions);
         }
         else
         {
             foreach (string basePath in basePaths)
             {
                 var ignoredFileAccessExceptions = new List<Exception>();
-                IEnumerable<string> files = this.FindMatches(basePath, ignoredFileAccessExceptions);
+                IEnumerable<string> files = this.FindMatches(basePath, this.IgnoredExceptions);
                 files =  this.OutputOrCacheFiles(basePath, files);
                 foreach (string file in files)
                     yield return file;
-                this.IgnoredExceptions = this.IgnoredExceptions.AddRange(ignoredFileAccessExceptions);
             }
         }
 
@@ -62,7 +59,7 @@ public abstract class AbstractGlobber : IGlobber
         }
     }
 
-    protected abstract IEnumerable<string> FindMatches(string basePath, List<Exception> ignoredFileAccessExceptions);
+    protected abstract IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions);
 
     private IEnumerable<string> OutputOrCacheFiles(string basePath, IEnumerable<string> filePaths)
     {
@@ -101,5 +98,20 @@ public abstract class AbstractGlobber : IGlobber
             return path;
 
         return Path.GetFullPath(Path.Combine(this.CurrentWorkingDirectory, basePath, path));
+    }
+
+    protected class IgnoredExceptionSet
+    {
+        private ImmutableHashSet<string> MessageSet { get; set; } = ImmutableHashSet<string>.Empty;
+        public ImmutableList<Exception> Exceptions { get; private set; } = ImmutableList<Exception>.Empty;
+
+        public void Add(Exception ignoredException)
+        {
+            if (!this.MessageSet.Contains(ignoredException.Message))
+            {
+                this.Exceptions = this.Exceptions.Add(ignoredException);
+                this.MessageSet = this.MessageSet.Add(ignoredException.Message);
+            }
+        }
     }
 }

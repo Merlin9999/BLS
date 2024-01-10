@@ -20,7 +20,7 @@ public class ImprovedGlobber : AbstractGlobber
     {
     }
 
-    protected override IEnumerable<string> FindMatches(string basePath, List<Exception> ignoredFileAccessExceptions)
+    protected override IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions)
     {
         StringComparer stringComparer = this.Args.CaseSensitive 
             ? StringComparer.InvariantCulture 
@@ -52,7 +52,7 @@ public class ImprovedGlobber : AbstractGlobber
             .Select(g => Glob.Parse(g))
             .ToImmutableList();
 
-        foreach (FileInfo fileInfo in this.EnumerateAllFiles(1, maxLevel,rootDir, excludeGlobs, rootDir, baseDir, ignoredFileAccessExceptions))
+        foreach (FileInfo fileInfo in this.EnumerateAllFiles(1, maxLevel,rootDir, excludeGlobs, rootDir, baseDir, ignoredExceptions))
         {
             string fileName = BuildRelativeFileName(fileInfo.FullName, rootDir, baseDir);
 
@@ -62,7 +62,7 @@ public class ImprovedGlobber : AbstractGlobber
     }
 
     private IEnumerable<FileInfo> EnumerateAllFiles(int level, int maxLevel, DirectoryInfo dirInfo, ImmutableList<Glob> excludeGlobs, 
-        DirectoryInfo rootDir, DirectoryInfo baseDir, List<Exception> ignoredFileAccessExceptions)
+        DirectoryInfo rootDir, DirectoryInfo baseDir, IgnoredExceptionSet ignoredExceptions)
     {
         if (maxLevel > 0 && level > maxLevel)
             yield break;
@@ -70,7 +70,7 @@ public class ImprovedGlobber : AbstractGlobber
         ImmutableList<FileInfo> files = this.DoFileSysOp(
             () => dirInfo.EnumerateFiles().ToImmutableList(),
             () => ImmutableList<FileInfo>.Empty,
-            ignoredFileAccessExceptions);
+            ignoredExceptions);
 
         foreach (FileInfo fileInfo in files)
             yield return fileInfo;
@@ -78,7 +78,7 @@ public class ImprovedGlobber : AbstractGlobber
         ImmutableList<DirectoryInfo> subDirInfos = this.DoFileSysOp(
             () => dirInfo.EnumerateDirectories().ToImmutableList(),
             () => ImmutableList<DirectoryInfo>.Empty,
-            ignoredFileAccessExceptions);
+            ignoredExceptions);
 
         foreach (DirectoryInfo subDirInfo in subDirInfos)
         {
@@ -87,7 +87,7 @@ public class ImprovedGlobber : AbstractGlobber
             if (excludeGlobs.Any(glob => glob.IsMatch(fullFolderNamePath)))
                 continue;
 
-            foreach (FileInfo fileInfo in this.EnumerateAllFiles(level + 1, maxLevel, subDirInfo, excludeGlobs, rootDir, baseDir, ignoredFileAccessExceptions))
+            foreach (FileInfo fileInfo in this.EnumerateAllFiles(level + 1, maxLevel, subDirInfo, excludeGlobs, rootDir, baseDir, ignoredExceptions))
                 yield return fileInfo;
         }
     }
@@ -119,7 +119,7 @@ public class ImprovedGlobber : AbstractGlobber
         return retVal;
     }
 
-    private T DoFileSysOp<T>(Func<T> operation, Func<T> getDefault, List<Exception> ignoredFileAccessExceptions)
+    private T DoFileSysOp<T>(Func<T> operation, Func<T> getDefault, IgnoredExceptionSet ignoredExceptions)
     {
         try
         {
@@ -127,22 +127,22 @@ public class ImprovedGlobber : AbstractGlobber
         }
         catch (SecurityException se) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
-            ignoredFileAccessExceptions.Add(se);
+            ignoredExceptions.Add(se);
             return getDefault();
         }
         catch (UnauthorizedAccessException uae) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
-            ignoredFileAccessExceptions.Add(uae);
+            ignoredExceptions.Add(uae);
             return getDefault();
         }
         catch (DirectoryNotFoundException dnfe) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
-            ignoredFileAccessExceptions.Add(dnfe);
+            ignoredExceptions.Add(dnfe);
             return getDefault();
         }
         catch (IOException ioe) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
-            ignoredFileAccessExceptions.Add(ioe);
+            ignoredExceptions.Add(ioe);
             return getDefault();
         }
     }

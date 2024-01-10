@@ -14,7 +14,7 @@ public class SystemGlobber : AbstractGlobber
         this._matcher = CreateMatcher(this.Args);
     }
 
-    protected override IEnumerable<string> FindMatches(string basePath, List<Exception> ignoredFileAccessExceptions)
+    protected override IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions)
     {
         PatternMatchingResult files;
 
@@ -24,22 +24,22 @@ public class SystemGlobber : AbstractGlobber
         }
         catch (SecurityException se) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
-            ignoredFileAccessExceptions.Add(se);
+            ignoredExceptions.Add(se);
             yield break;
         }
         catch (UnauthorizedAccessException uae) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
-            ignoredFileAccessExceptions.Add(uae);
+            ignoredExceptions.Add(uae);
             yield break;
         }
         catch (DirectoryNotFoundException dnfe) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
-            ignoredFileAccessExceptions.Add(dnfe);
+            ignoredExceptions.Add(dnfe);
             yield break;
         }
         catch (IOException ioe) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
-            ignoredFileAccessExceptions.Add(ioe);
+            ignoredExceptions.Add(ioe);
             yield break;
         }
 
