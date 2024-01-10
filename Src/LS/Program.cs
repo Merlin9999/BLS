@@ -105,38 +105,41 @@ internal abstract class Program
 }
 
 [Verb("list-files", isDefault: true, ["files"], HelpText = "List Files")]
-public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberArgs
+public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
 {
-    [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory.")]
+    [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
-    [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output.")]
+    [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
     public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
 }
 
 [Verb("search-path", isDefault: false, ["path"], HelpText = "Search Path")]
-public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberArgs
+public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
 {
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
-    [Option('d', "allow-duplicates", Default = true, HelpText = "Toggle allowing duplicates if multiple base paths for faster output.")]
+    [Option('d', "allow-duplicates", Default = true, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
     public bool AllowDuplicatesWhenMultipleBasePaths { get; set; } = true;
 }
 
 public abstract class BaseArgs
 {
-    [Value(0, HelpText = "Included Paths. At least 1 is required.")]
+    [Value(0, Required = true, HelpText = "Included Paths. At least 1 is required")]
     public IEnumerable<string> IncludeGlobPaths { get; set; } = new List<string>();
 
     [Option('x', "exclude", HelpText = "Excluded Paths (optional)")]
     public IEnumerable<string> ExcludeGlobPaths { get; set; } = new List<string>();
 
-    [Option('c', "case-sensitive", Default = false, HelpText = "Toggle to add case sensitive path matching.")]
+    [Option('c', "case-sensitive", Default = false, HelpText = "Toggle to add case sensitive path matching")]
     public bool CaseSensitive { get; set; }
 
-    [Option('s', "sort", Default = false, HelpText = "Toggle to sort.")]
+    [Option('s', "sort", Default = false, HelpText = "Toggle to sort")]
     public bool Sort { get; set; }
 
-    [Option('a', "abort-on-access-errors", Default = false, HelpText = "Toggle abort on file system access errors.")]
+    [Option('a', "abort-on-access-errors", Default = false, HelpText = "Toggle abort on file system access errors")]
     public bool AbortOnFileSystemAccessExceptions { get; set; }
+
+    [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
+    public bool UseFrameworkGlobber { get; set; }
 }
