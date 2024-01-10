@@ -128,6 +128,9 @@ public abstract class BaseArgs
     [Option('x', "exclude", HelpText = "Excluded Paths (optional)")]
     public IEnumerable<string> ExcludeGlobPaths { get; set; } = new List<string>();
 
+    [Option('q', "fully-qualified-paths", HelpText = "Output fully qualified paths")]
+    public bool UseFullyQualifiedPaths { get; set; }
+
     [Option('c', "case-sensitive", Default = false, HelpText = "Toggle to add case sensitive path matching")]
     public bool CaseSensitive { get; set; }
 

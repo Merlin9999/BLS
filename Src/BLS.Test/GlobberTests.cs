@@ -362,7 +362,7 @@ namespace BLS.Test
 
             IGlobber globber = globberFactoryMethod(args);
 
-            return globber.Execute().ToImmutableList();
+            return globber.Execute().Select(p => AbstractGlobber.ToForwardSlashPathSeparators(p)).ToImmutableList();
         }
     }
 }

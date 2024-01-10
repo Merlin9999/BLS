@@ -10,9 +10,6 @@ public class ImprovedGlobber : AbstractGlobber
     // Derived from: https://stackoverflow.com/a/54300816/677612
     // Check out: https://stackoverflow.com/a/34580159/677612
 
-    private bool? _doPathSeparatorReplace;
-    private bool DoPathSeparatorReplace => this._doPathSeparatorReplace ??= Path.DirectorySeparatorChar == '\\' && Path.AltDirectorySeparatorChar == '/';
-
     private static readonly Regex DriveOnlyRegex = new Regex("^[a-zA-Z][:]$");
 
     public ImprovedGlobber(IGlobberArgs args) 
@@ -32,7 +29,7 @@ public class ImprovedGlobber : AbstractGlobber
         foreach (string globPath in this.Args.ExcludeGlobPaths)
             this.VerifyPathIsNotRooted(globPath);
 
-        string normalizedBasePath = this.NormalizePathSeparators(basePath);
+        string normalizedBasePath = ToBackSlashPathSeparators(basePath);
 
         DirectoryInfo baseDir = new DirectoryInfo(normalizedBasePath);
         DirectoryInfo rootDir = this.DetermineRootPathFromBasePathAndIncludes(baseDir, stringComparer);
@@ -57,7 +54,7 @@ public class ImprovedGlobber : AbstractGlobber
             string fileName = BuildRelativeFileName(fileInfo.FullName, rootDir, baseDir);
 
             if (includeGlobs.Any(glob => glob.IsMatch(fileName)) && !excludeGlobs.Any(glob => glob.IsMatch(fileName)))
-                yield return this.ToForwardSlashPathSeparators(fileName);
+                yield return fileName;
         }
     }
 
@@ -189,7 +186,7 @@ public class ImprovedGlobber : AbstractGlobber
 
     private string[] SplitPathIntoSegments(string path)
     {
-        string normalizedPath = this.NormalizePathSeparators(path);
+        string normalizedPath = ToBackSlashPathSeparators(path);
         string[] segments = normalizedPath.Split('\\', StringSplitOptions.RemoveEmptyEntries);
         return segments;
     }
@@ -219,21 +216,9 @@ public class ImprovedGlobber : AbstractGlobber
         string rootPath = Path.Combine(matchingPathSegments.First().ToArray());
         if (DriveOnlyRegex.IsMatch(rootPath))
             rootPath = rootPath + '\\';
+        else if (Path.IsPathRooted(rootPath) && !(rootPath.EndsWith('\\') || rootPath.EndsWith('/')))
+            rootPath = rootPath + '\\';
 
         return new DirectoryInfo(rootPath);
-    }
-
-    private string NormalizePathSeparators(string path)
-    {
-        return this.DoPathSeparatorReplace
-            ? path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)
-            : path;
-    }
-
-    private string ToForwardSlashPathSeparators(string path)
-    {
-        return this.DoPathSeparatorReplace
-            ? path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            : path;
     }
 }
