@@ -1,6 +1,6 @@
 ﻿using Serilog;
 
-namespace CLConsole;
+namespace BLS;
 
 public abstract class AbstractGlobberHandler
 {

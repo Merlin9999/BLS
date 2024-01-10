@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.FileSystemGlobbing;
+﻿using System.Security;
+using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
-using System.Security;
 
-namespace CLConsole;
+namespace BLS;
 
 public class SystemGlobber : AbstractGlobber
 {
@@ -11,7 +11,7 @@ public class SystemGlobber : AbstractGlobber
     public SystemGlobber(IGlobberArgs args) 
         : base(args)
     {
-        this._matcher = CreateMatcher(this._args);
+        this._matcher = CreateMatcher(this.Args);
     }
 
     protected override IEnumerable<string> FindMatches(string basePath, List<Exception> ignoredFileAccessExceptions)
@@ -22,22 +22,22 @@ public class SystemGlobber : AbstractGlobber
         {
             files = this._matcher.Execute(new DirectoryInfoWrapper(new DirectoryInfo(basePath)));
         }
-        catch (SecurityException se) when (!this._args.AbortOnFileSystemAccessExceptions)
+        catch (SecurityException se) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
             ignoredFileAccessExceptions.Add(se);
             yield break;
         }
-        catch (UnauthorizedAccessException uae) when (!this._args.AbortOnFileSystemAccessExceptions)
+        catch (UnauthorizedAccessException uae) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
             ignoredFileAccessExceptions.Add(uae);
             yield break;
         }
-        catch (DirectoryNotFoundException dnfe) when (!this._args.AbortOnFileSystemAccessExceptions)
+        catch (DirectoryNotFoundException dnfe) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
             ignoredFileAccessExceptions.Add(dnfe);
             yield break;
         }
-        catch (IOException ioe) when (!this._args.AbortOnFileSystemAccessExceptions)
+        catch (IOException ioe) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
             ignoredFileAccessExceptions.Add(ioe);
             yield break;

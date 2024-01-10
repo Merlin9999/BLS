@@ -1,11 +1,10 @@
 ﻿using System.Collections.Immutable;
-using System.Security;
 
-namespace CLConsole;
+namespace BLS;
 
 public abstract class AbstractGlobber : IGlobber
 {
-    protected readonly IGlobberArgs _args;
+    protected readonly IGlobberArgs Args;
     private ImmutableList<string> _fileCache = ImmutableList<string>.Empty;
 
     private bool? _canOutputImmediately;
@@ -13,12 +12,12 @@ public abstract class AbstractGlobber : IGlobber
     private string? _currentDirectory;
 
     private string CurrentWorkingDirectory => this._currentDirectory ??= Directory.GetCurrentDirectory();
-    private bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this._args.BasePaths.Count() > 1;
-    private bool CanOutputImmediately => this._canOutputImmediately ??= !this._args.Sort && (this._args.AllowDuplicatesWhenMultipleBasePaths || this._args.BasePaths.Count() <= 1);
+    private bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this.Args.BasePaths.Count() > 1;
+    private bool CanOutputImmediately => this._canOutputImmediately ??= !this.Args.Sort && (this.Args.AllowDuplicatesWhenMultipleBasePaths || this.Args.BasePaths.Count() <= 1);
 
     protected AbstractGlobber(IGlobberArgs args)
     {
-        this._args = args;
+        this.Args = args;
     }
 
     public IEnumerable<Exception> IgnoredFileAccessExceptions => this.IgnoredExceptions;
@@ -26,7 +25,7 @@ public abstract class AbstractGlobber : IGlobber
 
     public IEnumerable<string> Execute()
     {
-        List<string> basePaths = this._args.BasePaths.ToList();
+        List<string> basePaths = this.Args.BasePaths.ToList();
             
         this.IgnoredExceptions = ImmutableList<Exception>.Empty;
 
@@ -82,7 +81,7 @@ public abstract class AbstractGlobber : IGlobber
 
     private List<string> GetCachedFiles(List<string> basePaths)
     {
-        StringComparer stringComparer = this._args.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+        StringComparer stringComparer = this.Args.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
         // If multiple base paths, we need to remove duplicates.
         List<string> filePaths = basePaths.Count > 1

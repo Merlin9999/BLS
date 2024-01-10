@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
-using CLConsole;
 
-namespace LS.Test;
+namespace BLS.Test;
 
 public class GlobberTestArgs : IGlobberArgs
 {

@@ -1,41 +1,37 @@
 {
   "profiles": {
-    "WSL": {
-      "commandName": "WSL2",
-      "distributionName": ""
-    },
-    "LS - No Args": {
+    "BLS - No Args": {
       "commandName": "Project"
     },
-    "LS - All Files": {
+    "BLS - All Files": {
       "commandName": "Project",
       "commandLineArgs": "**\\*"
     },
-    "LS - Project Files - All": {
+    "BLS - Project Files - All": {
       "commandName": "Project",
       "commandLineArgs": "..\\..\\..\\**\\*"
     },
-    "LS - ProjectFiles - Exclude bin & obj": {
+    "BLS - ProjectFiles - Exclude bin & obj": {
       "commandName": "Project",
       "commandLineArgs": "**\\* -b ..\\..\\.. -x bin\\**\\* obj\\**\\*"
     },
-    "LS - ProjectFiles & Parent .vs": {
+    "BLS - ProjectFiles & Parent .vs": {
       "commandName": "Project",
       "commandLineArgs": "**\\* -b ..\\..\\.. ..\\..\\..\\.. -x bin\\**\\* obj\\**\\* LS\\**"
     },
-    "LS - ProjectFiles & Parent & Sorted": {
+    "BLS - ProjectFiles & Parent & Sorted": {
       "commandName": "Project",
       "commandLineArgs": "**\\* -b ..\\..\\.. ..\\..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -s"
     },
-    "LS - Path Executables": {
+    "BLS - Path Executables": {
       "commandName": "Project",
       "commandLineArgs": "path *.exe *.com *.bat *.con *.cmd"
     },
-    "LS - Users - Exceptions": {
+    "BLS - Users - Exceptions": {
       "commandName": "Project",
       "commandLineArgs": "**\\* -b c:\\Users"
     },
-    "LS - C:\\": {
+    "BLS - C:\\": {
       "commandName": "Project",
       "commandLineArgs": "* -b c:\\"
     }

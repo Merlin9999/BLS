@@ -1,8 +1,7 @@
-﻿using System.Collections.Immutable;
-using MediatR;
+﻿using MediatR;
 using Serilog;
 
-namespace CLConsole;
+namespace BLS;
 
 public class ListFilesHandler : AbstractGlobberHandler, IRequestHandler<ListFilesArgs, EExitCode>
 {

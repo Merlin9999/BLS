@@ -1,11 +1,9 @@
 ﻿using System.Collections.Immutable;
-using System.IO;
 using System.Security;
 using System.Text.RegularExpressions;
 using DotNet.Globbing;
-using static System.Net.WebRequestMethods;
 
-namespace CLConsole;
+namespace BLS;
 
 public class ImprovedGlobber : AbstractGlobber
 {
@@ -24,14 +22,14 @@ public class ImprovedGlobber : AbstractGlobber
 
     protected override IEnumerable<string> FindMatches(string basePath, List<Exception> ignoredFileAccessExceptions)
     {
-        StringComparer stringComparer = this._args.CaseSensitive 
+        StringComparer stringComparer = this.Args.CaseSensitive 
             ? StringComparer.InvariantCulture 
             : StringComparer.InvariantCultureIgnoreCase;
 
-        foreach (string globPath in this._args.IncludeGlobPaths) 
+        foreach (string globPath in this.Args.IncludeGlobPaths) 
             this.VerifyPathIsNotRooted(globPath);
 
-        foreach (string globPath in this._args.ExcludeGlobPaths)
+        foreach (string globPath in this.Args.ExcludeGlobPaths)
             this.VerifyPathIsNotRooted(globPath);
 
         string normalizedBasePath = this.NormalizePathSeparators(basePath);
@@ -39,7 +37,7 @@ public class ImprovedGlobber : AbstractGlobber
         DirectoryInfo baseDir = new DirectoryInfo(normalizedBasePath);
         DirectoryInfo rootDir = this.DetermineRootPathFromBasePathAndIncludes(baseDir, stringComparer);
 
-        var includeGlobInfos = this._args.IncludeGlobPaths
+        var includeGlobInfos = this.Args.IncludeGlobPaths
             .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), rootDir, baseDir))
             .Select(g => new {Path = g, Glob = Glob.Parse(g) })
             .ToImmutableList();
@@ -49,7 +47,7 @@ public class ImprovedGlobber : AbstractGlobber
         int minLevel = includePaths.Min(path => CalculateFolderSegmentCount(path));
         int maxLevel = minLevel < 0 ? -1 : includePaths.Max(path => CalculateFolderSegmentCount(path));
         
-        ImmutableList<Glob> excludeGlobs = this._args.ExcludeGlobPaths
+        ImmutableList<Glob> excludeGlobs = this.Args.ExcludeGlobPaths
             .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), rootDir, baseDir))
             .Select(g => Glob.Parse(g))
             .ToImmutableList();
@@ -127,22 +125,22 @@ public class ImprovedGlobber : AbstractGlobber
         {
             return operation();
         }
-        catch (SecurityException se) when (!this._args.AbortOnFileSystemAccessExceptions)
+        catch (SecurityException se) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
             ignoredFileAccessExceptions.Add(se);
             return getDefault();
         }
-        catch (UnauthorizedAccessException uae) when (!this._args.AbortOnFileSystemAccessExceptions)
+        catch (UnauthorizedAccessException uae) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
             ignoredFileAccessExceptions.Add(uae);
             return getDefault();
         }
-        catch (DirectoryNotFoundException dnfe) when (!this._args.AbortOnFileSystemAccessExceptions)
+        catch (DirectoryNotFoundException dnfe) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
             ignoredFileAccessExceptions.Add(dnfe);
             return getDefault();
         }
-        catch (IOException ioe) when (!this._args.AbortOnFileSystemAccessExceptions)
+        catch (IOException ioe) when (!this.Args.AbortOnFileSystemAccessExceptions)
         {
             ignoredFileAccessExceptions.Add(ioe);
             return getDefault();
@@ -198,7 +196,7 @@ public class ImprovedGlobber : AbstractGlobber
 
     private DirectoryInfo DetermineRootPathFromBasePathAndIncludes(DirectoryInfo basePath, StringComparer comparer)
     {
-        var rootDirectoryList = this._args.IncludeGlobPaths
+        var rootDirectoryList = this.Args.IncludeGlobPaths
             .Select(p => new { Path = p, RelativePathPrefix = Path.Combine(this.SplitPathByParentPrefix(p).RelativePrefix) })
             .Where(x => x.RelativePathPrefix.Length > 0)
             .Select(x => new DirectoryInfo(Path.GetFullPath(Path.Combine(basePath.FullName, x.RelativePathPrefix))))

@@ -8,7 +8,6 @@
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
     <Copyright>Copyright (c) 2024 Marc Behnke</Copyright>
-    <RootNamespace>CLConsole</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

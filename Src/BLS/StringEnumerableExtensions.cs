@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-namespace CLConsole;
+﻿namespace BLS;
 
 public static class StringEnumerableExtensions
 {

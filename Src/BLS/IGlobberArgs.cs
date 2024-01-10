@@ -1,4 +1,4 @@
-﻿namespace CLConsole;
+﻿namespace BLS;
 
 public interface IGlobberAndFactoryArgs : IGlobberArgs, IGlobberFactoryArgs
 {

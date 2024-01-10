@@ -1,12 +1,4 @@
-﻿using MediatR;
-using Microsoft.Extensions.FileSystemGlobbing;
-using System;
-using System.Collections.Immutable;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
-using System.Security;
-
-namespace CLConsole;
+﻿namespace BLS;
 
 public class GlobToConsole
 {

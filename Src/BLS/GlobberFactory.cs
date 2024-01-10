@@ -1,4 +1,4 @@
-﻿namespace CLConsole;
+﻿namespace BLS;
 
 public class GlobberFactory
 {

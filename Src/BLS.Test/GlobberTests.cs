@@ -1,9 +1,7 @@
 using System.Collections.Immutable;
-using CLConsole;
-using DotNet.Globbing;
 using FluentAssertions;
 
-namespace LS.Test
+namespace BLS.Test
 {
     public class GlobberTests
     {

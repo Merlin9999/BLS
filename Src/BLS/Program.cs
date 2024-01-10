@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-using System.Text.RegularExpressions;
-using CommandLine;
-using CommandLine.Text;
+﻿using CommandLine;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Nito.AsyncEx;
@@ -9,7 +6,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace CLConsole;
+namespace BLS;
 
 public enum EExitCode
 {
