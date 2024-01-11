@@ -161,8 +161,6 @@ namespace BLS.Test
                 "SubFolder1/SubFolder1_FolderLevel2.md",
                 "SubFolder2/SubFolder2_FolderLevel2.txt",
                 "SubFolder2/SubFolder2_FolderLevel2.md",
-                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
-                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
@@ -183,8 +181,6 @@ namespace BLS.Test
                 "SubFolder1/SubFolder1_FolderLevel2.md",
                 "SubFolder2/SubFolder2_FolderLevel2.txt",
                 "SubFolder2/SubFolder2_FolderLevel2.md",
-                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
-                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
@@ -203,10 +199,6 @@ namespace BLS.Test
                 "FolderLevel1_DifferentBaseName.txt",
                 "SubFolder1/SubFolder1_FolderLevel2.txt",
                 "SubFolder1/SubFolder1_FolderLevel2.md",
-                //"SubFolder2/SubFolder2_FolderLevel2.txt",
-                //"SubFolder2/SubFolder2_FolderLevel2.md",
-                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
-                //"SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
             };
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
