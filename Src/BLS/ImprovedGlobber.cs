@@ -32,10 +32,10 @@ public class ImprovedGlobber : AbstractGlobber
         string normalizedBasePath = ToBackSlashPathSeparators(basePath);
 
         DirectoryInfo baseDir = new DirectoryInfo(normalizedBasePath);
-        DirectoryInfo rootDir = this.DetermineRootPathFromBasePathAndIncludes(baseDir, stringComparer);
+        DirectoryInfo commonRootDir = this.DetermineCommonRootPathFromBasePathAndIncludes(baseDir, stringComparer);
 
         var includeGlobInfos = this.Args.IncludeGlobPaths
-            .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), rootDir, baseDir))
+            .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), commonRootDir, baseDir))
             .Select(g => new {Path = g, Glob = Glob.Parse(g) })
             .ToImmutableList();
 
@@ -45,13 +45,13 @@ public class ImprovedGlobber : AbstractGlobber
         int maxLevel = minLevel < 0 ? -1 : includePaths.Max(path => CalculateFolderSegmentCount(path));
         
         ImmutableList<Glob> excludeGlobs = this.Args.ExcludeGlobPaths
-            .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), rootDir, baseDir))
+            .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), commonRootDir, baseDir))
             .Select(g => Glob.Parse(g))
             .ToImmutableList();
 
-        foreach (FileInfo fileInfo in this.EnumerateAllFiles(1, maxLevel,rootDir, excludeGlobs, rootDir, baseDir, ignoredExceptions))
+        foreach (FileInfo fileInfo in this.EnumerateAllFiles(1, maxLevel,commonRootDir, excludeGlobs, commonRootDir, baseDir, ignoredExceptions))
         {
-            string fileName = BuildRelativeFileName(fileInfo.FullName, rootDir, baseDir);
+            string fileName = BuildRelativeFileName(fileInfo.FullName, commonRootDir, baseDir);
 
             if (includeGlobs.Any(glob => glob.IsMatch(fileName)) && !excludeGlobs.Any(glob => glob.IsMatch(fileName)))
                 yield return fileName;
@@ -59,7 +59,7 @@ public class ImprovedGlobber : AbstractGlobber
     }
 
     private IEnumerable<FileInfo> EnumerateAllFiles(int level, int maxLevel, DirectoryInfo dirInfo, ImmutableList<Glob> excludeGlobs, 
-        DirectoryInfo rootDir, DirectoryInfo baseDir, IgnoredExceptionSet ignoredExceptions)
+        DirectoryInfo commonRootDir, DirectoryInfo baseDir, IgnoredExceptionSet ignoredExceptions)
     {
         if (maxLevel > 0 && level > maxLevel)
             yield break;
@@ -79,12 +79,12 @@ public class ImprovedGlobber : AbstractGlobber
 
         foreach (DirectoryInfo subDirInfo in subDirInfos)
         {
-            string fullFolderNamePath = BuildRelativeFileName(subDirInfo.FullName, rootDir, baseDir);
+            string fullFolderNamePath = BuildRelativeFileName(subDirInfo.FullName, commonRootDir, baseDir);
 
             if (excludeGlobs.Any(glob => glob.IsMatch(fullFolderNamePath)))
                 continue;
 
-            foreach (FileInfo fileInfo in this.EnumerateAllFiles(level + 1, maxLevel, subDirInfo, excludeGlobs, rootDir, baseDir, ignoredExceptions))
+            foreach (FileInfo fileInfo in this.EnumerateAllFiles(level + 1, maxLevel, subDirInfo, excludeGlobs, commonRootDir, baseDir, ignoredExceptions))
                 yield return fileInfo;
         }
     }
@@ -164,7 +164,7 @@ public class ImprovedGlobber : AbstractGlobber
         return segments;
     }
 
-    private DirectoryInfo DetermineRootPathFromBasePathAndIncludes(DirectoryInfo basePath, StringComparer comparer)
+    private DirectoryInfo DetermineCommonRootPathFromBasePathAndIncludes(DirectoryInfo basePath, StringComparer comparer)
     {
         var rootDirectoryList = this.Args.IncludeGlobPaths
             .Select(p => new { Path = p, RelativePathPrefix = Path.Combine(this.SplitPathByParentPrefix(p).RelativePrefix) })
@@ -186,12 +186,12 @@ public class ImprovedGlobber : AbstractGlobber
             .Select(x => rootPathSegmentsList.First().Take(x).ToImmutableList())
             .Where(pathSegsToMatch => rootPathSegmentsList.All(pathSegs => pathSegs.StartsWith(pathSegsToMatch, comparer)));
 
-        string rootPath = Path.Combine(matchingPathSegments.First().ToArray());
-        if (DriveOnlyRegex.IsMatch(rootPath))
-            rootPath = rootPath + '\\';
-        else if (Path.IsPathRooted(rootPath) && !(rootPath.EndsWith('\\') || rootPath.EndsWith('/')))
-            rootPath = rootPath + '\\';
+        string commonRootPath = Path.Combine(matchingPathSegments.First().ToArray());
+        if (DriveOnlyRegex.IsMatch(commonRootPath))
+            commonRootPath = commonRootPath + '\\';
+        else if (Path.IsPathRooted(commonRootPath) && !(commonRootPath.EndsWith('\\') || commonRootPath.EndsWith('/')))
+            commonRootPath = commonRootPath + '\\';
 
-        return new DirectoryInfo(rootPath);
+        return new DirectoryInfo(commonRootPath);
     }
 }

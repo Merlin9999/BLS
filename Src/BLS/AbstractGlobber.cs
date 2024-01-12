@@ -127,10 +127,10 @@ public abstract class AbstractGlobber : IGlobber
             ? ToForwardSlashPathSeparators(path)
             : path;
 
-    public static string BuildRelativeFileName(string fullFileNamePath, DirectoryInfo rootDir, DirectoryInfo baseDir)
+    public static string BuildRelativeFileName(string fullFileNamePath, DirectoryInfo commonRootDir, DirectoryInfo baseDir)
     {
-        string relativeFileName = Path.GetRelativePath(rootDir.FullName, fullFileNamePath);
-        string prefix = Path.GetRelativePath(baseDir.FullName, rootDir.FullName);
+        string relativeFileName = Path.GetRelativePath(commonRootDir.FullName, fullFileNamePath);
+        string prefix = Path.GetRelativePath(baseDir.FullName, commonRootDir.FullName);
         if (prefix != ".")
             relativeFileName = Path.Combine(prefix, relativeFileName);
         return relativeFileName;
