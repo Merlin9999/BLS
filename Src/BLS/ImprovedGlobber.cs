@@ -89,33 +89,6 @@ public class ImprovedGlobber : AbstractGlobber
         }
     }
 
-    private static string BuildRelativeFileName(string fullFileNamePath, DirectoryInfo rootDir, DirectoryInfo baseDir)
-    {
-        string relativeFileName = Path.GetRelativePath(rootDir.FullName, fullFileNamePath);
-        string prefix = Path.GetRelativePath(baseDir.FullName, rootDir.FullName);
-        if (prefix != ".")
-            relativeFileName = Path.Combine(prefix, relativeFileName);
-        return relativeFileName;
-    }
-
-    public static int CalculateFolderSegmentCount(string path)
-    {
-        if (path.IndexOf("**", StringComparison.Ordinal) >= 0)
-            return -1;
-
-        ImmutableList<string> pathSegments = path.Split('/', '\\')
-            .Where(s => s.Trim() != string.Empty)
-            .ToImmutableList();
-
-        int periodCount = pathSegments.Count(s => s == ".");
-        int dblPeriodCount = pathSegments.Count(s => s == "..");
-
-        int retVal = pathSegments.Count - (2 * dblPeriodCount) - periodCount;
-        if (retVal < 0)
-            return -1;
-        return retVal;
-    }
-
     private T DoFileSysOp<T>(Func<T> operation, Func<T> getDefault, IgnoredExceptionSet ignoredExceptions)
     {
         try
