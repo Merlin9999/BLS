@@ -15,6 +15,12 @@ public class ImprovedGlobber : AbstractGlobber
     public ImprovedGlobber(IGlobberArgs args) 
         : base(args)
     {
+        this.Args.IncludeGlobPaths = this.Args.IncludeGlobPaths
+            .Select(path => string.Join("/", SplitPathIntoSegments(path).Where(s => s != ".")))
+            .ToImmutableList();
+        this.Args.ExcludeGlobPaths = this.Args.ExcludeGlobPaths
+            .Select(path => string.Join("/", SplitPathIntoSegments(path).Where(s => s != ".")))
+            .ToImmutableList();
     }
 
     protected override IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions)
@@ -24,10 +30,10 @@ public class ImprovedGlobber : AbstractGlobber
             : StringComparer.InvariantCultureIgnoreCase;
 
         foreach (string globPath in this.Args.IncludeGlobPaths) 
-            this.VerifyPathIsNotRooted(globPath);
+            this.ValidateGlobPath(globPath, true);
 
         foreach (string globPath in this.Args.ExcludeGlobPaths)
-            this.VerifyPathIsNotRooted(globPath);
+            this.ValidateGlobPath(globPath, false);
 
         string normalizedBasePath = ToBackSlashPathSeparators(basePath);
 
@@ -117,15 +123,37 @@ public class ImprovedGlobber : AbstractGlobber
         }
     }
 
-    private void VerifyPathIsNotRooted(string path)
+    private void ValidateGlobPath(string path, bool isIncludePath)
     {
         if (Path.IsPathRooted(path))
             throw new ArgumentException($"Glob path cannot be rooted! Path: \"{path}\"");
+
+        string[] segments = SplitPathIntoSegments(path).Where(s => s != ".").ToArray();
+
+        if (isIncludePath)
+        {
+            bool inParentSegmentPrefix = false;
+            for (int i = segments.Length - 1; i >= 0; i--)
+            {
+                string segment = segments[i];
+                if (inParentSegmentPrefix)
+                {
+                    if (segment != "..")
+                        throw new ArgumentException(
+                            $"Include Glob path cannot have segment of \"..\" after first named directory! Path: \"{path}\"");
+                }
+                else
+                {
+                    if (segment == "..")
+                        inParentSegmentPrefix = true;
+                }
+            }
+        }
     }
 
     private (string RelativePrefix, string RelativePath) SplitPathByParentPrefix(string path)
     {
-        var segments = this.SplitPathIntoSegments(path);
+        var segments = SplitPathIntoSegments(path);
         return SplitPathByParentPrefix(path, segments);
     }
 
@@ -137,19 +165,19 @@ public class ImprovedGlobber : AbstractGlobber
 
     private static (string RelativePrefix, string RelativePath) SplitPathByParentPrefix(string path, string[] segments)
     {
-        int index = GetIndexOfLastSpecialFolder(segments);
+        int index = GetIndexOfLastSpecialFolder();
         if (index < 0)
             return (string.Empty, path);
 
         return (Path.Combine(segments.Take(index + 1).ToArray()),
             Path.Combine(segments.Skip(index + 1).ToArray()));
 
-        int GetIndexOfLastSpecialFolder(string[] strings)
+        int GetIndexOfLastSpecialFolder()
         {
             for (int i = segments.Length - 1; i >= 0; i--)
             {
                 string segment = segments[i];
-                if (segment == ".." || segment == ".")
+                if (segment == "..")
                     return i;
             }
 
@@ -157,7 +185,7 @@ public class ImprovedGlobber : AbstractGlobber
         }
     }
 
-    private string[] SplitPathIntoSegments(string path)
+    private static string[] SplitPathIntoSegments(string path)
     {
         string normalizedPath = ToBackSlashPathSeparators(path);
         string[] segments = normalizedPath.Split('\\', StringSplitOptions.RemoveEmptyEntries);
@@ -174,7 +202,7 @@ public class ImprovedGlobber : AbstractGlobber
             .ToImmutableList();
 
         var rootPathSegmentsList = rootDirectoryList
-            .Select(di => this.SplitPathIntoSegments(di.FullName))
+            .Select(di => SplitPathIntoSegments(di.FullName))
             .ToImmutableList();
 
         int minTotalSegments = rootPathSegmentsList
