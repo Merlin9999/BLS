@@ -7,12 +7,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BLS", "BLS\BLS.csproj", "{9
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BLS.Test", "BLS.Test\BLS.Test.csproj", "{1DE9F61E-50DE-478E-86BB-B7DF55B183F2}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{EF9A336C-BA20-4FCF-8F9B-0F819652BBBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF9A336C-BA20-4FCF-8F9B-0F819652BBBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF9A336C-BA20-4FCF-8F9B-0F819652BBBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{970348A5-EB18-4510-9058-F9F95A5B49D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{970348A5-EB18-4510-9058-F9F95A5B49D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{970348A5-EB18-4510-9058-F9F95A5B49D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
