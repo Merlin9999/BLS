@@ -136,21 +136,29 @@ public abstract class AbstractGlobber : IGlobber
         return relativeFileName;
     }
 
-    public static int CalculateFolderSegmentCount(string path)
+    public static ImmutableList<string> SplitPathIntoSegments(string path)
     {
-        if (path.IndexOf("**", StringComparison.Ordinal) >= 0)
-            return -1;
-
-        ImmutableList<string> pathSegments = path.Split('/', '\\')
+        return path.Split('/', '\\')
             .Where(s => s.Trim() != string.Empty)
             .ToImmutableList();
+    }
 
-        int periodCount = pathSegments.Count(s => s == ".");
-        int dblPeriodCount = pathSegments.Count(s => s == "..");
+    public static ImmutableList<string> SplitPathAndNormalizeRelativeSegments(string path)
+    {
+        ImmutableList<string> pathSegments = SplitPathIntoSegments(path)
+            .Where(s => s != ".")
+            .ToImmutableList();
+        for (var index = pathSegments.Count - 1; index >= 1; index--)
+        {
+            string segment = pathSegments[index];
+            if (segment != "..")
+                continue;
 
-        int retVal = pathSegments.Count - (2 * dblPeriodCount) - periodCount;
-        if (retVal < 0)
-            return -1;
-        return retVal;
+            string priorSegment = pathSegments[index - 1];
+            if (priorSegment != "..")
+                pathSegments = pathSegments.RemoveAt(--index).RemoveAt(index);
+        }
+
+        return pathSegments;
     }
 }

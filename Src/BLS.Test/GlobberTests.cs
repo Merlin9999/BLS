@@ -303,35 +303,6 @@ namespace BLS.Test
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
 
-        [Fact]
-        public void CalculateFolderSegmentCountTests()
-        {
-            var paths = new (string Path, int ExpectedSegmentCount)[]
-            {
-                ("", 0),
-                ("ZZZ", 1),
-                ("Z/Z/Z", 3),
-                ("Z*/*Z/*Z*", 3),
-                ("Z/Z**/Z", -1),
-                ("Z/**/Z", -1),
-                ("**", -1),
-                ("Z/./Z", 2),
-                ("Z/../Z", 1),
-                ("Z/*/Z", 3),
-                ("Z/**/Z", -1),
-                ("*A/**B/folderC/D*.txt", -1),
-                ("*A/*B/folderC/D*.txt", 4),
-                ("../..", -1),
-            };
-
-            foreach ((string Path, int ExpectedSegmentCount) x in paths)
-            {
-                int actual = ImprovedGlobber.CalculateFolderSegmentCount(x.Path);
-                int expected = x.ExpectedSegmentCount;
-                expected.Should().Be(actual);
-            }
-        }
-
         private static void ExecuteGlobAndValidate(Func<IGlobberArgs, IGlobber> globberFactoryMethod,
             IEnumerable<string> expected, string basePath, string includeGlob, string? excludeGlob = null)
         {
