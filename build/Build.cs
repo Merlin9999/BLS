@@ -17,7 +17,13 @@ using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using Nuke.Common.Tools.MSBuild;
+using Nuke.Common.CI.GitHubActions;
 
+[GitHubActions(
+    "continuous",
+    GitHubActionsImage.WindowsLatest,
+    OnPushBranches = new []{ "main" },
+    InvokedTargets = new[] { nameof(Pack) })]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
@@ -128,6 +134,7 @@ class Build : NukeBuild
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
+                .EnableNoRestore()
                 .SetVersion(GitVersion.NuGetVersion)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
@@ -156,6 +163,8 @@ class Build : NukeBuild
             DotNetPack(cfg => cfg
                 .SetProject(Solution.GetProject("BLS")?.Path ?? "<Project Not Found>")
                 .SetConfiguration(Configuration)
+                .EnableNoRestore()
+                .EnableNoBuild()
                 .SetVersion(GitVersion.NuGetVersion)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
