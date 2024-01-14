@@ -238,7 +238,7 @@ class Build : NukeBuild
             "develop" => Configuration.Debug,
             string s when s.StartsWith("feature/") => Configuration.Debug,
 
-            "master" => Configuration.Release,
+            "main" => Configuration.Release,
             string s when s.StartsWith("release/") => Configuration.Release,
             string s when s.StartsWith("hotfix/") => Configuration.Release,
 
