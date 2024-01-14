@@ -4,16 +4,20 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <Copyright>Copyright (c) 2024 Marc Behnke</Copyright>
+    <Copyright>Copyright (c) 2024 Marc Behnke, All Rights Reserved</Copyright>
     <PackageId>Beyond.LS</PackageId>
     <Title>Beyond LS</Title>
     <Authors>Marc Behnke</Authors>
-    <PackAsTool>False</PackAsTool>
+    <PackAsTool>True</PackAsTool>
     <AssemblyName>bls</AssemblyName>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'" />
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
