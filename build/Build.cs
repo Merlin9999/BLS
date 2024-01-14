@@ -1,28 +1,34 @@
-using System;
-using System.Linq;
 using Nuke.Common;
+using Nuke.Common.ChangeLog;
 using Nuke.Common.CI;
+using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.Execution;
 using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
-using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.GitHub;
+using Nuke.Common.Tools.GitVersion;
+using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Utilities.Collections;
 using Serilog;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using GlobExpressions;
 using static System.Net.Mime.MediaTypeNames;
 using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
-using Nuke.Common.Tools.MSBuild;
-using Nuke.Common.CI.GitHubActions;
+
 
 [GitHubActions(
     "continuous",
     GitHubActionsImage.WindowsLatest,
-    FetchDepth = 200,
+    FetchDepth = 0,
     OnPushBranches = new []{ "main" },
     InvokedTargets = new[] { nameof(Pack), nameof(ShowInfo) })]
 class Build : NukeBuild
@@ -46,22 +52,10 @@ class Build : NukeBuild
     AbsolutePath SourceDirectory => RootDirectory / "Src";
     AbsolutePath OutputDirectory => RootDirectory / "Output";
 
-    //private Configuration GetBranchBasedConfiguration()
-    //{
-    //    return GitVersion.BranchName switch
-    //    {
-    //        "develop" => Configuration.Debug,
-    //        string s when s.StartsWith("feature/") => Configuration.Debug,
-
-    //        "master" => Configuration.Release,
-    //        string s when s.StartsWith("release/") => Configuration.Release,
-    //        string s when s.StartsWith("hotfix/") => Configuration.Release,
-
-    //        null => throw new Exception("Unable to determine the git branch!"),
-    //        string unrecognizedBranch => throw new Exception(
-    //            $"Unable to determine build configuration from branch name \"{unrecognizedBranch}\""),
-    //    };
-    //}
+    static GitHubActions GitHubActions => GitHubActions.Instance;
+    string GithubNugetFeed => GitHubActions != null
+        ? $"https://nuget.pkg.github.com/{GitHubActions.RepositoryOwner}/index.json"
+        : null;
 
     Target ShowInfo => _ => _
         .Before(Clean)
@@ -160,6 +154,7 @@ class Build : NukeBuild
     Target Pack => _ => _
         .DependsOn(Clean)
         .DependsOn(UnitTest)
+        .Triggers(PublishToGithubNuGetFeed)
         //.Produces(OutputDirectory / "*.nupkg")
         .Executes(() =>
         {
@@ -174,5 +169,25 @@ class Build : NukeBuild
                 .SetInformationalVersion(GitVersion.InformationalVersion)
                 .SetOutputDirectory(OutputDirectory)
             );
+        });
+
+    // Examples at: https://anktsrkr.github.io/post/manage-your-package-release-using-nuke-in-github/
+    // GitHub NuGet Hosting: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry
+    Target PublishToGithubNuGetFeed => _ => _
+        .Description($"Publishing Tools Package to Github NuGet Feed.")
+        .Requires(() => IsServerBuild && Configuration.Equals(Configuration.Release))
+        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
+        .Executes(() =>
+        {
+            Glob.Files(OutputDirectory, "*.nupkg")
+                .ForEach(pkgFile =>
+                {
+                    DotNetNuGetPush(cfg => cfg
+                        .SetTargetPath(pkgFile)
+                        .SetSource(GithubNugetFeed)
+                        .SetApiKey(GitHubActions.Token)
+                        .EnableSkipDuplicate()
+                    );
+                });
         });
 }
