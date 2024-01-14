@@ -29,6 +29,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     "continuous",
     GitHubActionsImage.WindowsLatest,
     FetchDepth = 0,
+    EnableGitHubToken = true,
     OnPushBranches = new []{ "main" },
     InvokedTargets = new[] { nameof(Pack), nameof(ShowInfo) })]
 class Build : NukeBuild
