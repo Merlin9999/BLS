@@ -22,6 +22,7 @@ using Nuke.Common.CI.GitHubActions;
 [GitHubActions(
     "continuous",
     GitHubActionsImage.WindowsLatest,
+    FetchDepth = 200,
     OnPushBranches = new []{ "main" },
     InvokedTargets = new[] { nameof(Pack) })]
 class Build : NukeBuild
