@@ -201,7 +201,7 @@ class Build : NukeBuild
             {
                 LocalNuGetSourceDirectory.CreateDirectory();
                 OutputDirectory.GlobFiles("*.nupkg")
-                    .ForEach(pkgFile => File.Copy(pkgFile, LocalNuGetSourceDirectory / pkgFile.Name));
+                    .ForEach(pkgFile => File.Copy(pkgFile, LocalNuGetSourceDirectory / pkgFile.Name,true));
             }
         });
 
