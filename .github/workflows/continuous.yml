@@ -38,3 +38,5 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj', '**/Directory.Packages.props') }}
       - name: 'Run: Pack, ShowInfo'
         run: ./Src/build.cmd Pack ShowInfo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
