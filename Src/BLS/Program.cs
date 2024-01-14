@@ -122,7 +122,7 @@ public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryA
 
 public abstract class BaseArgs
 {
-    [Value(0, Required = true, HelpText = "Included Paths. At least 1 is required")]
+    [Value(0, Required = true, MetaName = "Include Globs", HelpText = "Included Paths. At least 1 is required")]
     public IEnumerable<string> IncludeGlobPaths { get; set; } = new List<string>();
 
     [Option('x', "exclude", HelpText = "Excluded Paths (optional)")]
