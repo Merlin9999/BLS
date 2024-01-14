@@ -30,8 +30,9 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     GitHubActionsImage.WindowsLatest,
     FetchDepth = 0,
     EnableGitHubToken = true,
+    ImportSecrets = new[] {nameof(NuGetOrgApiKey)},
     OnPushBranches = new []{ "main" },
-    InvokedTargets = new[] { nameof(Pack), nameof(ShowInfo) })]
+    InvokedTargets = new[] { nameof(Publish), nameof(ShowInfo) })]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
@@ -51,6 +52,9 @@ class Build : NukeBuild
 
     Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
+    [Parameter("NuGet.org Token Secret"), Secret]
+    readonly string NuGetOrgApiKey = string.Empty;
+
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
     [GitVersion] readonly GitVersion GitVersion;
@@ -59,6 +63,7 @@ class Build : NukeBuild
     AbsolutePath OutputDirectory => RootDirectory / "Output";
     AbsolutePath LocalNuGetSourceDirectory => RootDirectory / "NugetPackageSource";
 
+    string NugetOrgFeed => "https://api.nuget.org/v3/index.json";
     static GitHubActions GitHubActions => GitHubActions.Instance;
     string GithubNugetFeed => GitHubActions != null
         ? $"https://nuget.pkg.github.com/{GitHubActions.RepositoryOwner}/index.json"
@@ -161,7 +166,6 @@ class Build : NukeBuild
     Target Pack => _ => _
         .DependsOn(Clean)
         .DependsOn(UnitTest)
-        .Triggers(PublishToNuGetFeed)
         //.Produces(OutputDirectory / "*.nupkg")
         .Executes(() =>
         {
@@ -170,7 +174,7 @@ class Build : NukeBuild
                 .SetConfiguration(Configuration)
                 .EnableNoRestore()
                 .EnableNoBuild()
-                .SetVersion(GitVersion.NuGetVersion)
+                .SetVersion(GitVersion.NuGetVersionV2)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
                 .SetInformationalVersion(GitVersion.InformationalVersion)
@@ -180,30 +184,59 @@ class Build : NukeBuild
 
     // Examples at: https://anktsrkr.github.io/post/manage-your-package-release-using-nuke-in-github/
     // GitHub NuGet Hosting: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry
-    Target PublishToNuGetFeed => _ => _
-        .Description($"Publishing Tools Package to Github NuGet Feed.")
-        .OnlyWhenDynamic(() => Configuration.Equals(Configuration.Release))
+    // New: https://blog.raulnq.com/github-packages-publishing-nuget-packages-using-nuke-with-gitversion-and-github-actions
+    Target PublishToNuGetOrg => _ => _
+        .Description($"Publishing Tools Package to the public Github NuGet Feed.")
+        .DependsOn(Pack)
+        .OnlyWhenDynamic(() => IsServerBuild && Configuration.Equals(Configuration.Release))
         .Executes(() =>
         {
-            if (IsServerBuild)
-            {
-                OutputDirectory.GlobFiles("*.nupkg")
-                    .ForEach(pkgFile =>
-                    {
-                        DotNetNuGetPush(cfg => cfg
-                            .SetTargetPath(pkgFile)
-                            .SetSource(GithubNugetFeed)
-                            .SetApiKey(GitHubActions.Token)
-                            .EnableSkipDuplicate()
-                        );
-                    });
-            }
-            else // Local Build
-            {
-                LocalNuGetSourceDirectory.CreateDirectory();
-                OutputDirectory.GlobFiles("*.nupkg")
-                    .ForEach(pkgFile => File.Copy(pkgFile, LocalNuGetSourceDirectory / pkgFile.Name,true));
-            }
+            OutputDirectory.GlobFiles("*.nupkg")
+                .ForEach(pkgFile =>
+                {
+                    DotNetNuGetPush(cfg => cfg
+                        .SetTargetPath(pkgFile)
+                        .SetSource(NugetOrgFeed)
+                        .SetApiKey(NuGetOrgApiKey)
+                        .EnableSkipDuplicate()
+                    );
+                });
+        });
+
+    Target PublishGitHubNuGet => _ => _
+        .Description($"Publishing Tools Package to a private Github NuGet Feed.")
+        .DependsOn(Pack)
+        .OnlyWhenDynamic(() => IsServerBuild && Configuration.Equals(Configuration.Release))
+        .Executes(() =>
+        {
+            OutputDirectory.GlobFiles("*.nupkg")
+                .ForEach(pkgFile =>
+                {
+                    DotNetNuGetPush(cfg => cfg
+                        .SetTargetPath(pkgFile)
+                        .SetSource(GithubNugetFeed)
+                        .SetApiKey(GitHubActions.Token)
+                        .EnableSkipDuplicate()
+                    );
+                });
+        });
+    Target PublishToLocalNuGet => _ => _
+        .Description($"Publishing Tools Package to a local NuGet Feed Folder.")
+        .DependsOn(Pack)
+        .OnlyWhenDynamic(() => IsLocalBuild && Configuration.Equals(Configuration.Release))
+        .Executes(() =>
+        {
+            LocalNuGetSourceDirectory.CreateDirectory();
+            OutputDirectory.GlobFiles("*.nupkg")
+                .ForEach(pkgFile => File.Copy(pkgFile, LocalNuGetSourceDirectory / pkgFile.Name, true));
+        });
+
+    Target Publish => _ => _
+        .Description("Publish NuGet Package to location depending on if this is a local or remote server build.")
+        .Triggers(PublishToNuGetOrg)
+        .Triggers(PublishToLocalNuGet)
+        .Executes(() =>
+        {
         });
 
     protected override void OnBuildInitialized()

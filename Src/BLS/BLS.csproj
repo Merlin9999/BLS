@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <Copyright>Copyright (c) 2024 Marc Behnke, All Rights Reserved</Copyright>
-    <PackageId>Beyond.LS</PackageId>
-    <Title>Beyond LS</Title>
+    <PackageId>Beyond.LS.Tool</PackageId>
+    <Title>Beyond LS Console</Title>
     <Authors>Marc Behnke</Authors>
     <PackAsTool>True</PackAsTool>
     <AssemblyName>bls</AssemblyName>
