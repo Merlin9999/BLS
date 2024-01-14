@@ -75,6 +75,7 @@
               "Clean",
               "Compile",
               "Pack",
+              "PublishToGithubNuGetFeed",
               "Restore",
               "ShowInfo",
               "UnitTest"
@@ -94,6 +95,7 @@
               "Clean",
               "Compile",
               "Pack",
+              "PublishToGithubNuGetFeed",
               "Restore",
               "ShowInfo",
               "UnitTest"
