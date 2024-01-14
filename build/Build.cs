@@ -131,6 +131,12 @@ class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
+            Log.Information($"                   NuGetVersion: {GitVersion.NuGetVersion}");
+            Log.Information($"                 NuGetVersionV2: {GitVersion.NuGetVersionV2}");
+            Log.Information($"                 AssemblySemVer: {GitVersion.AssemblySemVer}");
+            Log.Information($"             AssemblySemFileVer: {GitVersion.AssemblySemFileVer}");
+            Log.Information($"           InformationalVersion: {GitVersion.InformationalVersion}\n");
+
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
