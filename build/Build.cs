@@ -46,22 +46,22 @@ class Build : NukeBuild
     AbsolutePath SourceDirectory => RootDirectory / "Src";
     AbsolutePath OutputDirectory => RootDirectory / "Output";
 
-    private Configuration GetBranchBasedConfiguration()
-    {
-        return GitVersion.BranchName switch
-        {
-            "develop" => Configuration.Debug,
-            string s when s.StartsWith("feature/") => Configuration.Debug,
+    //private Configuration GetBranchBasedConfiguration()
+    //{
+    //    return GitVersion.BranchName switch
+    //    {
+    //        "develop" => Configuration.Debug,
+    //        string s when s.StartsWith("feature/") => Configuration.Debug,
 
-            "master" => Configuration.Release,
-            string s when s.StartsWith("release/") => Configuration.Release,
-            string s when s.StartsWith("hotfix/") => Configuration.Release,
+    //        "master" => Configuration.Release,
+    //        string s when s.StartsWith("release/") => Configuration.Release,
+    //        string s when s.StartsWith("hotfix/") => Configuration.Release,
 
-            null => throw new Exception("Unable to determine the git branch!"),
-            string unrecognizedBranch => throw new Exception(
-                $"Unable to determine build configuration from branch name \"{unrecognizedBranch}\""),
-        };
-    }
+    //        null => throw new Exception("Unable to determine the git branch!"),
+    //        string unrecognizedBranch => throw new Exception(
+    //            $"Unable to determine build configuration from branch name \"{unrecognizedBranch}\""),
+    //    };
+    //}
 
     Target ShowInfo => _ => _
         .Before(Clean)
@@ -101,7 +101,7 @@ class Build : NukeBuild
 
             Log.Information("Build Configuration Information:");
             Log.Information($"  Local or Remote (CI/CD) Build: {LocalOrRemoteText()}");
-            Log.Information($"        Configuration by Branch: {GetBranchBasedConfiguration()}");
+            //Log.Information($"        Configuration by Branch: {GetBranchBasedConfiguration()}");
             Log.Information($"            Final Configuration: {Configuration}\n");
 
             Log.Information($"Generic Version Information:");
