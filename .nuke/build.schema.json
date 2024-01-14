@@ -6,17 +6,13 @@
     "build": {
       "type": "object",
       "properties": {
-        "Configuration": {
-          "type": "string",
-          "description": "Configuration to build - Default is 'Debug' (local) or 'Release' (server)",
-          "enum": [
-            "Debug",
-            "Release"
-          ]
-        },
         "Continue": {
           "type": "boolean",
           "description": "Indicates to continue a previously failed build attempt"
+        },
+        "Debug": {
+          "type": "boolean",
+          "description": "Override build configuration for a Debug build"
         },
         "Help": {
           "type": "boolean",
@@ -62,6 +58,10 @@
             "type": "string"
           }
         },
+        "Release": {
+          "type": "boolean",
+          "description": "Override build configuration for a Release build"
+        },
         "Root": {
           "type": "string",
           "description": "Root directory during build execution"
@@ -75,7 +75,7 @@
               "Clean",
               "Compile",
               "Pack",
-              "PublishToGithubNuGetFeed",
+              "PublishToNuGetFeed",
               "Restore",
               "ShowInfo",
               "UnitTest"
@@ -95,7 +95,7 @@
               "Clean",
               "Compile",
               "Pack",
-              "PublishToGithubNuGetFeed",
+              "PublishToNuGetFeed",
               "Restore",
               "ShowInfo",
               "UnitTest"

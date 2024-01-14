@@ -42,8 +42,13 @@ class Build : NukeBuild
     public static int Main () => Execute<Build>();
 
 
-    [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    [Parameter("Override build configuration for a Debug build")]
+    readonly bool Debug = false;
+
+    [Parameter("Override build configuration for a Release build")]
+    readonly bool Release = false;
+
+    Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
@@ -51,6 +56,7 @@ class Build : NukeBuild
 
     AbsolutePath SourceDirectory => RootDirectory / "Src";
     AbsolutePath OutputDirectory => RootDirectory / "Output";
+    AbsolutePath LocalNuGetSourceDirectory => RootDirectory / "NugetPackageSource";
 
     static GitHubActions GitHubActions => GitHubActions.Instance;
     string GithubNugetFeed => GitHubActions != null
@@ -154,7 +160,7 @@ class Build : NukeBuild
     Target Pack => _ => _
         .DependsOn(Clean)
         .DependsOn(UnitTest)
-        .Triggers(PublishToGithubNuGetFeed)
+        .Triggers(PublishToNuGetFeed)
         //.Produces(OutputDirectory / "*.nupkg")
         .Executes(() =>
         {
@@ -173,21 +179,72 @@ class Build : NukeBuild
 
     // Examples at: https://anktsrkr.github.io/post/manage-your-package-release-using-nuke-in-github/
     // GitHub NuGet Hosting: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry
-    Target PublishToGithubNuGetFeed => _ => _
+    Target PublishToNuGetFeed => _ => _
         .Description($"Publishing Tools Package to Github NuGet Feed.")
-        .Requires(() => IsServerBuild && Configuration.Equals(Configuration.Release))
-        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
+        .OnlyWhenDynamic(() => Configuration.Equals(Configuration.Release))
         .Executes(() =>
         {
-            Glob.Files(OutputDirectory, "*.nupkg")
-                .ForEach(pkgFile =>
-                {
-                    DotNetNuGetPush(cfg => cfg
-                        .SetTargetPath(pkgFile)
-                        .SetSource(GithubNugetFeed)
-                        .SetApiKey(GitHubActions.Token)
-                        .EnableSkipDuplicate()
-                    );
-                });
+            if (IsServerBuild)
+            {
+                OutputDirectory.GlobFiles("*.nupkg")
+                    .ForEach(pkgFile =>
+                    {
+                        DotNetNuGetPush(cfg => cfg
+                            .SetTargetPath(pkgFile)
+                            .SetSource(GithubNugetFeed)
+                            .SetApiKey(GitHubActions.Token)
+                            .EnableSkipDuplicate()
+                        );
+                    });
+            }
+            else // Local Build
+            {
+                LocalNuGetSourceDirectory.CreateDirectory();
+                OutputDirectory.GlobFiles("*.nupkg")
+                    .ForEach(pkgFile => File.Copy(pkgFile, LocalNuGetSourceDirectory / pkgFile.Name));
+            }
         });
+
+    protected override void OnBuildInitialized()
+    {
+        base.OnBuildInitialized();
+
+        Configuration = GetConfigurationOverrideParameters() ??
+            GetBranchBasedConfiguration();
+
+        Assert.True(Configuration != null,
+            "Unable to determine configuration by branch or local override parameter!");
+    }
+
+    private Configuration GetConfigurationOverrideParameters()
+    {
+        // If this is NOT a local build (e.g. CI Server), command line overrides are not allowed.
+        if (IsLocalBuild)
+        {
+            Assert.True(!Debug || !Release,
+                $"Build parameters for {nameof(Debug)} and {nameof(Release)} configurations cannot both be set!");
+            return Debug
+                ? Configuration.Debug
+                : (Release ? Configuration.Release : null);
+        }
+
+        return null;
+    }
+
+    private Configuration GetBranchBasedConfiguration()
+    {
+        return GitVersion.BranchName switch
+        {
+            "develop" => Configuration.Debug,
+            string s when s.StartsWith("feature/") => Configuration.Debug,
+
+            "master" => Configuration.Release,
+            string s when s.StartsWith("release/") => Configuration.Release,
+            string s when s.StartsWith("hotfix/") => Configuration.Release,
+
+            null => throw new Exception("Unable to determine the git branch!"),
+            string unrecognizedBranch => throw new Exception(
+                $"Unable to determine build configuration from branch name \"{unrecognizedBranch}\""),
+        };
+    }
 }
