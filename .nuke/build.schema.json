@@ -74,7 +74,7 @@
             "enum": [
               "Clean",
               "Compile",
-              "Package",
+              "Pack",
               "Restore",
               "ShowInfo",
               "UnitTest"
@@ -93,7 +93,7 @@
             "enum": [
               "Clean",
               "Compile",
-              "Package",
+              "Pack",
               "Restore",
               "ShowInfo",
               "UnitTest"

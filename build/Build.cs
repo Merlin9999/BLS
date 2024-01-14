@@ -147,9 +147,10 @@ class Build : NukeBuild
             );
         });
 
-    Target Package => _ => _
+    Target Pack => _ => _
         .DependsOn(Clean)
         .DependsOn(UnitTest)
+        .Produces(OutputDirectory / "*.nupkg")
         .Executes(() =>
         {
             DotNetPack(cfg => cfg
