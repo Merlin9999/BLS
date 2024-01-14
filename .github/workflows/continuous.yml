@@ -36,10 +36,5 @@ jobs:
             .nuke/temp
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj', '**/Directory.Packages.props') }}
-      - name: 'Run: Pack'
-        run: ./Src/build.cmd Pack
-      - name: 'Publish: Output'
-        uses: actions/upload-artifact@v3
-        with:
-          name: Output
-          path: Output
+      - name: 'Run: Pack, ShowInfo'
+        run: ./Src/build.cmd Pack ShowInfo

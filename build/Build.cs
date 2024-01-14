@@ -24,7 +24,7 @@ using Nuke.Common.CI.GitHubActions;
     GitHubActionsImage.WindowsLatest,
     FetchDepth = 200,
     OnPushBranches = new []{ "main" },
-    InvokedTargets = new[] { nameof(Pack) })]
+    InvokedTargets = new[] { nameof(Pack), nameof(ShowInfo) })]
 class Build : NukeBuild
 {
     /// Support plugins are available for:
@@ -64,6 +64,8 @@ class Build : NukeBuild
     }
 
     Target ShowInfo => _ => _
+        .Before(Clean)
+        .Before(Restore)
         .Executes(() =>
         {
             string LocalOrRemoteText() => IsLocalBuild ? "Local Build" : "Remote (CI/CD) Build";
@@ -132,12 +134,6 @@ class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            Log.Information($"                   NuGetVersion: {GitVersion.NuGetVersion}");
-            Log.Information($"                 NuGetVersionV2: {GitVersion.NuGetVersionV2}");
-            Log.Information($"                 AssemblySemVer: {GitVersion.AssemblySemVer}");
-            Log.Information($"             AssemblySemFileVer: {GitVersion.AssemblySemFileVer}");
-            Log.Information($"           InformationalVersion: {GitVersion.InformationalVersion}\n");
-
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
@@ -164,7 +160,7 @@ class Build : NukeBuild
     Target Pack => _ => _
         .DependsOn(Clean)
         .DependsOn(UnitTest)
-        .Produces(OutputDirectory / "*.nupkg")
+        //.Produces(OutputDirectory / "*.nupkg")
         .Executes(() =>
         {
             DotNetPack(cfg => cfg
