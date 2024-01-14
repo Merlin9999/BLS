@@ -43,6 +43,11 @@
           "type": "boolean",
           "description": "Disables displaying the NUKE logo"
         },
+        "NuGetOrgApiKey": {
+          "type": "string",
+          "description": "NuGet.org Token Secret",
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
+        },
         "Partition": {
           "type": "string",
           "description": "Partition to use on CI"
@@ -75,7 +80,10 @@
               "Clean",
               "Compile",
               "Pack",
-              "PublishToNuGetFeed",
+              "Publish",
+              "PublishGitHubNuGet",
+              "PublishToLocalNuGet",
+              "PublishToNuGetOrg",
               "Restore",
               "ShowInfo",
               "UnitTest"
@@ -95,7 +103,10 @@
               "Clean",
               "Compile",
               "Pack",
-              "PublishToNuGetFeed",
+              "Publish",
+              "PublishGitHubNuGet",
+              "PublishToLocalNuGet",
+              "PublishToNuGetOrg",
               "Restore",
               "ShowInfo",
               "UnitTest"

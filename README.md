@@ -1,12 +1,12 @@
 # Beyond LS (BLS)
 
 To Install:
-> dotnet tool install Beyond.LS --prerelease --global
+> dotnet tool install Beyond.LS.Tool --prerelease --global
 
 To Update:
-> dotnet tool update Beyond.LS --prerelease --global
+> dotnet tool update Beyond.LS.Tool --prerelease --global
 
 To Uninstall:
-> dotnet tool uninstall Beyond.LS --global
+> dotnet tool uninstall Beyond.LS.Tool --global
 
 The --prerelease parameter allows prereleases to be installed and updated.

@@ -36,7 +36,8 @@ jobs:
             .nuke/temp
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj', '**/Directory.Packages.props') }}
-      - name: 'Run: Pack, ShowInfo'
-        run: ./Src/build.cmd Pack ShowInfo
+      - name: 'Run: Publish, ShowInfo'
+        run: ./Src/build.cmd Publish ShowInfo
         env:
+          NuGetOrgApiKey: ${{ secrets.NUGET_ORG_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
