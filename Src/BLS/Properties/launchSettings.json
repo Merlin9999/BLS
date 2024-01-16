@@ -50,6 +50,10 @@
     "BLS - Zip Alt": {
       "commandName": "Project",
       "commandLineArgs": "zip **\\Obj\\** -b ..\\..\\.. -z Temp.zip"
+    },
+    "BLS - Zip FileFind from Parent": {
+      "commandName": "Project",
+      "commandLineArgs": "zip filefind\\** -z Temp.zip -r -b C:\\Fls\\Software"
     }
   }
 }

@@ -216,7 +216,8 @@ public class ImprovedGlobber : AbstractGlobber
         {
             this._caseSensitive = caseSensitive;
             this._folderInfo = PreprocessGlobPathAndCalculateLevels(globPath);
-            this._glob = Glob.Parse(this._folderInfo.GlobPath, new GlobOptions() { Evaluation = new EvaluationOptions() { CaseInsensitive = !this._caseSensitive } });
+            this._glob = Glob.Parse(this._folderInfo.GlobPath, 
+                new GlobOptions() { Evaluation = new EvaluationOptions() { CaseInsensitive = !this._caseSensitive } });
         }
 
         public bool IsFolderMatch(string path)
@@ -258,7 +259,8 @@ public class ImprovedGlobber : AbstractGlobber
 
             if (!this._interimGlobCache.TryGetValue(inPathSegmentCountToMatch, out Glob? interimGlob))
             {
-                interimGlob = Glob.Parse(string.Join('/', this._folderInfo.PathSegments.Take(inPathSegmentCountToMatch)));
+                interimGlob = Glob.Parse(string.Join('/', this._folderInfo.PathSegments.Take(inPathSegmentCountToMatch)),
+                    new GlobOptions() { Evaluation = new EvaluationOptions() { CaseInsensitive = !this._caseSensitive } });
                 this._interimGlobCache = this._interimGlobCache.Add(inPathSegmentCountToMatch, interimGlob);
             }
 
