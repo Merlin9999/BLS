@@ -109,17 +109,12 @@ public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryAr
     [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
-    [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
-    public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
 }
 
 [Verb("search-path", isDefault: false, ["path"], HelpText = "Search Path")]
 public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
 {
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
-
-    [Option('d', "allow-duplicates", Default = true, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
-    public bool AllowDuplicatesWhenMultipleBasePaths { get; set; } = true;
 }
 
 [Verb("zip-files", isDefault: false, ["zip"], HelpText = "Zip Files")]
@@ -134,11 +129,13 @@ public class ZipArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
         get => this.BasePaths.FirstOrDefault() ?? string.Empty;
         set => this.BasePaths = ImmutableList<string>.Empty.Add(value);
     }
-
     public IEnumerable<string> BasePaths { get; set; } = ImmutableList<string>.Empty.Add(".");
 
-    [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
-    public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
+    [Option('r', "replace-duplicates", SetName = "zip-duplicate-replace", Default = false, HelpText = "Toggle replacing duplicate files already in the zip file")]
+    public bool ReplaceOnDuplicate { get; set; }
+
+    [Option('e', "error-on-duplicates", SetName = "zip-duplicate-error", Default = false, HelpText = "Toggle erroring if a duplicate file name is already in the zip file")]
+    public bool ErrorOnDuplicate { get; set; }
 }
 
 public abstract class BaseArgs
@@ -157,6 +154,9 @@ public abstract class BaseArgs
 
     [Option('s', "sort", Default = false, HelpText = "Toggle to sort")]
     public bool Sort { get; set; }
+
+    [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
+    public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
 
     [Option('a', "abort-on-access-errors", Default = false, HelpText = "Toggle abort on file system access errors")]
     public bool AbortOnFileSystemAccessExceptions { get; set; }

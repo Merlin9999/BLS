@@ -27,7 +27,8 @@ public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchP
     {
         string? envPath = Environment.GetEnvironmentVariable("PATH");
         request.BasePaths = envPath?
-            .Split(Path.PathSeparator).Where(p => !string.IsNullOrWhiteSpace(p))
+            .Split(Path.PathSeparator)
+            .Where(p => !string.IsNullOrWhiteSpace(p))
             .ToList() ?? [];
     }
 }
