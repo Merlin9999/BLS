@@ -10,14 +10,14 @@ public abstract class AbstractGlobber : IGlobber
     private bool? _canOutputImmediately;
     private bool? _useFullyQualifiedOutputPaths;
     private string? _currentDirectory;
-    private bool? _normalizeToBackSlashPathSeparators;
-    private bool? _normalizeToForwardSlashPathSeparators;
+    private static bool? _normalizeToBackSlashPathSeparators;
+    private static bool? _normalizeToForwardSlashPathSeparators;
 
     private string CurrentWorkingDirectory => this._currentDirectory ??= Directory.GetCurrentDirectory();
     private bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this.Args.UseFullyQualifiedPaths || this.Args.BasePaths.Count() > 1;
     private bool CanOutputImmediately => this._canOutputImmediately ??= !this.Args.Sort && (this.Args.AllowDuplicatesWhenMultipleBasePaths || this.Args.BasePaths.Count() <= 1);
-    private bool NormalizeToBackSlashPathSeparators => this._normalizeToBackSlashPathSeparators ??= Path.DirectorySeparatorChar == '\\' && Path.AltDirectorySeparatorChar == '/';
-    private bool NormalizeToForwardSlashPathSeparators => this._normalizeToForwardSlashPathSeparators ??= Path.DirectorySeparatorChar == '/' && Path.AltDirectorySeparatorChar == '\\';
+    private static bool NormalizeToBackSlashPathSeparators => _normalizeToBackSlashPathSeparators ??= Path.DirectorySeparatorChar == '\\' && Path.AltDirectorySeparatorChar == '/';
+    private static bool NormalizeToForwardSlashPathSeparators => _normalizeToForwardSlashPathSeparators ??= Path.DirectorySeparatorChar == '/' && Path.AltDirectorySeparatorChar == '\\';
     
     protected AbstractGlobber(IGlobberArgs args)
     {
@@ -39,7 +39,7 @@ public abstract class AbstractGlobber : IGlobber
             IEnumerable<string> files = this.FindMatches(basePath, this.IgnoredExceptions);
             files = this.OutputOrCacheFiles(basePath, files);
             foreach (string file in files)
-                yield return this.NormalizePathSeparators(file);
+                yield return NormalizePathSeparators(file);
         }
         else
         {
@@ -49,7 +49,7 @@ public abstract class AbstractGlobber : IGlobber
                 IEnumerable<string> files = this.FindMatches(basePath, this.IgnoredExceptions);
                 files =  this.OutputOrCacheFiles(basePath, files);
                 foreach (string file in files)
-                    yield return this.NormalizePathSeparators(file);
+                    yield return NormalizePathSeparators(file);
             }
         }
 
@@ -59,7 +59,7 @@ public abstract class AbstractGlobber : IGlobber
         {
             List<string> files = this.GetCachedFiles(basePaths);
             foreach (string file in files)
-                yield return this.NormalizePathSeparators(file);
+                yield return NormalizePathSeparators(file);
         }
     }
 
@@ -121,9 +121,9 @@ public abstract class AbstractGlobber : IGlobber
 
     public static string ToBackSlashPathSeparators(string path) => path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
     public static string ToForwardSlashPathSeparators(string path) => path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    protected string NormalizePathSeparators(string path) => this.NormalizeToBackSlashPathSeparators
+    public static string NormalizePathSeparators(string path) => NormalizeToBackSlashPathSeparators
         ? ToBackSlashPathSeparators(path)
-        : this.NormalizeToForwardSlashPathSeparators
+        : NormalizeToForwardSlashPathSeparators
             ? ToForwardSlashPathSeparators(path)
             : path;
 

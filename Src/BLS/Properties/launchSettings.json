@@ -34,6 +34,22 @@
     "BLS - C:\\": {
       "commandName": "Project",
       "commandLineArgs": "* -b c:\\"
+    },
+    "BLS - Zip - Replace Dups": {
+      "commandName": "Project",
+      "commandLineArgs": "zip **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -z Temp.zip -r"
+    },
+    "BLS - Zip": {
+      "commandName": "Project",
+      "commandLineArgs": "zip **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -z Temp.zip"
+    },
+    "BLS - Zip - Error on Dups": {
+      "commandName": "Project",
+      "commandLineArgs": "zip **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -z Temp.zip -e"
+    },
+    "BLS - Zip Alt": {
+      "commandName": "Project",
+      "commandLineArgs": "zip **\\Obj\\** -b ..\\..\\.. -z Temp.zip"
     }
   }
 }
