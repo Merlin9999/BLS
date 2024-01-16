@@ -42,12 +42,12 @@ public class ImprovedGlobber : AbstractGlobber
         
         ImmutableList<IncludeGlobber> includeInfos = this.Args.IncludeGlobPaths
             .Select(gp => BuildRelativeFileName(Path.Combine(baseDir.FullName, gp), commonRootDir, baseDir))
-            .Select(gp => new IncludeGlobber(gp))
+            .Select(gp => new IncludeGlobber(gp, this.Args.CaseSensitive))
             .ToImmutableList();
         
         ImmutableList<Glob> excludeGlobs = this.Args.ExcludeGlobPaths
             .Select(g => BuildRelativeFileName(Path.Combine(baseDir.FullName, g), commonRootDir, baseDir))
-            .Select(g => Glob.Parse(g))
+            .Select(g => Glob.Parse(g,new GlobOptions(){Evaluation = new EvaluationOptions(){CaseInsensitive = !this.Args.CaseSensitive}}))
             .ToImmutableList();
 
         foreach (FileInfo fileInfo in this.EnumerateAllFiles(1, commonRootDir, includeInfos, excludeGlobs, commonRootDir, baseDir, ignoredExceptions))
@@ -210,11 +210,13 @@ public class ImprovedGlobber : AbstractGlobber
         private readonly ImprovedGlobberFolderInfo _folderInfo;
         private readonly Glob _glob;
         private ImmutableDictionary<int, Glob> _interimGlobCache = ImmutableDictionary<int, Glob>.Empty;
+        private bool _caseSensitive;
 
-        public IncludeGlobber(string globPath)
+        public IncludeGlobber(string globPath, bool caseSensitive)
         {
+            this._caseSensitive = caseSensitive;
             this._folderInfo = PreprocessGlobPathAndCalculateLevels(globPath);
-            this._glob = Glob.Parse(this._folderInfo.GlobPath);
+            this._glob = Glob.Parse(this._folderInfo.GlobPath, new GlobOptions() { Evaluation = new EvaluationOptions() { CaseInsensitive = !this._caseSensitive } });
         }
 
         public bool IsFolderMatch(string path)

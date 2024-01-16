@@ -34,6 +34,10 @@
     "BLS - C:\\": {
       "commandName": "Project",
       "commandLineArgs": "* -b c:\\"
+    },
+    "BLS - zip": {
+      "commandName": "Project",
+      "commandLineArgs": "zip **\\* -x **\\bin\\** **\\obj\\** -b ..\\..\\.. ..\\..\\..\\.. -z Test.zip"
     }
   }
 }

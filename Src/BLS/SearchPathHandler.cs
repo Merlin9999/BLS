@@ -17,8 +17,8 @@ public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchP
         InitBasePathsFromPathEnvironmentVar(request);
         LogArgs(request, this._logger);
 
-        GlobToConsole globToConsole = new GlobToConsole(request, Console.Out);
-        await globToConsole.ExecuteAsync();
+        GlobToTextWriter globToTextWriter = new GlobToTextWriter(request, Console.Out);
+        await globToTextWriter.ExecuteAsync();
 
         return EExitCode.Success;
     }
@@ -26,6 +26,8 @@ public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchP
     private static void InitBasePathsFromPathEnvironmentVar(SearchPathArgs request)
     {
         string? envPath = Environment.GetEnvironmentVariable("PATH");
-        request.BasePaths = envPath?.Split(Path.PathSeparator).ToList() ?? [];
+        request.BasePaths = envPath?
+            .Split(Path.PathSeparator).Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList() ?? [];
     }
 }

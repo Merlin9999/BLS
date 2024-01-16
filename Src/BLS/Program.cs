@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.Collections.Immutable;
+using CommandLine;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Nito.AsyncEx;
@@ -32,7 +33,7 @@ internal abstract class Program
 
             IMediator mediator = InitializeDI();
 
-            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, SearchPathArgs>(args);
+            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, SearchPathArgs, ZipArgs>(args);
 
             //if (args.Length == 0)
             //{
@@ -44,6 +45,7 @@ internal abstract class Program
             retValue = parserResult.MapResult(
                 (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (SearchPathArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (ZipArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (errors) => EExitCode.InvalidApplicationArguments);
 
             return (int)retValue;
@@ -118,6 +120,25 @@ public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryA
 
     [Option('d', "allow-duplicates", Default = true, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
     public bool AllowDuplicatesWhenMultipleBasePaths { get; set; } = true;
+}
+
+[Verb("zip-files", isDefault: false, ["zip"], HelpText = "Zip Files")]
+public class ZipArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
+{
+    [Option('z', "zip-file", Required = true, HelpText = "Zip file to create")]
+    public required string ZipFileName { get; set; }
+
+    [Option('b', "base-path", HelpText = "One or more base paths for globbing. Default is the working directory")]
+    public required string BasePath
+    {
+        get => this.BasePaths.FirstOrDefault() ?? string.Empty;
+        set => this.BasePaths = ImmutableList<string>.Empty.Add(value);
+    }
+
+    public IEnumerable<string> BasePaths { get; set; } = ImmutableList<string>.Empty.Add(".");
+
+    [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
+    public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
 }
 
 public abstract class BaseArgs
