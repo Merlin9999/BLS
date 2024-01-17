@@ -9,6 +9,8 @@ public abstract class AbstractGlobWriter
         this.OutputWriter = outputWriter;
     }
 
+    public abstract Task ExecuteAsync();
+
     protected async Task OutputIgnoredExceptionsAsync(List<Exception> ignoredFileAccessExceptions)
     {
         if (ignoredFileAccessExceptions.Count > 0)

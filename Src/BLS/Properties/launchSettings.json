@@ -54,6 +54,14 @@
     "BLS - Zip FileFind from Parent": {
       "commandName": "Project",
       "commandLineArgs": "zip filefind\\** -z Temp.zip -r -b C:\\Fls\\Software"
+    },
+    "BLS - Copy": {
+      "commandName": "Project",
+      "commandLineArgs": "copy **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -t CopiedFiles"
+    },
+    "BLS - Copy with Replace": {
+      "commandName": "Project",
+      "commandLineArgs": "copy **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -t CopiedFiles -r"
     }
   }
 }
