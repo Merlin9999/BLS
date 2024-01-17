@@ -19,8 +19,8 @@ public class ZipHandler : AbstractGlobberHandler, IRequestHandler<ZipArgs, EExit
         // Make sure the zip file we are about to create is NOT included.
         request.ExcludeGlobPaths = request.ExcludeGlobPaths.Prepend(request.ZipFileName);
 
-        GlobToZip globToZip = new GlobToZip(request, Console.Out);
-        await globToZip.ExecuteAsync();
+        GlobToZipWriter globToZipWriter = new GlobToZipWriter(request, Console.Out);
+        await globToZipWriter.ExecuteAsync();
 
         return EExitCode.Success;
     }

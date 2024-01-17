@@ -1,35 +1,21 @@
-﻿using System.IO.Compression;
+﻿using BLS;
+using System.IO.Compression;
 
 namespace BLS;
 
-public class GlobToZip : AbstractGlobWriter
+public class GlobToZipWriter : AbstractGlobToFileWriter<ZipArgs>
 {
-    private readonly ZipArgs _args;
-
-    public GlobToZip(ZipArgs args, TextWriter outputWriter)
-        : base(outputWriter)
+    public GlobToZipWriter(ZipArgs args, TextWriter outputWriter)
+        : base(args, outputWriter)
     {
-        this._args = args;
     }
 
-    public async Task ExecuteAsync()
+    protected override async Task WriteFilesAsync(IEnumerable<string> files, StringComparer comparer)
     {
-        bool foundParentFolderInIncludes = this._args.IncludeGlobPaths
-            .Any(p => AbstractGlobber.SplitPathAndNormalizeRelativeSegments(p).StartsWith(new[]{".."}));
-        if (foundParentFolderInIncludes)
-            throw new ArgumentException("Avoid using \"..\" folders in glob expressions when creating a zip file!");
+        bool duplicateFileInZipHandling = this.Args.ReplaceOnDuplicate || this.Args.ErrorOnDuplicate;
 
-        bool duplicateFileInZipHandling = this._args.ReplaceOnDuplicate || this._args.ErrorOnDuplicate;
-        IGlobber globber = GlobberFactory.Create(this._args);
-
-        IEnumerable<string> files = globber.Execute();
-
-        await using var zipFile = new FileStream(this._args.ZipFileName, FileMode.OpenOrCreate);
+        await using var zipFile = new FileStream(this.Args.ZipFileName, FileMode.OpenOrCreate);
         using var zipArchive = new ZipArchive(zipFile, ZipArchiveMode.Update);
-
-        var comparer = this._args.CaseSensitive
-            ? StringComparer.Ordinal
-            : StringComparer.OrdinalIgnoreCase;
 
         HashSet<string> filesInZipWithDups;
         HashSet<string> filesInZip;
@@ -57,7 +43,7 @@ public class GlobToZip : AbstractGlobWriter
             {
                 if (!filesInZip.Add(file))
                 {
-                    if (this._args.ReplaceOnDuplicate)
+                    if (this.Args.ReplaceOnDuplicate)
                     {
                         if (filesInZipWithDups.Contains(file))
                         {
@@ -74,21 +60,19 @@ public class GlobToZip : AbstractGlobWriter
                             zipArchive.GetEntry(file)?.Delete();
                         }
                     }
-                    else if (this._args.ErrorOnDuplicate)
+                    else if (this.Args.ErrorOnDuplicate)
                         throw new InvalidOperationException($"Zip already contains the file \"{file}\"!");
                     else
                         throw new NotImplementedException();
                 }
             }
 
-            await using var fileInStream = File.Open(Path.Combine(this._args.BasePath, file), FileMode.Open);
+            await using var sourceFileStream = File.Open(Path.Combine(this.Args.BasePath, file), FileMode.Open);
 
             ZipArchiveEntry fileEntry = zipArchive.CreateEntry(file);
-            await using var archiveOutStream = fileEntry.Open();
+            await using var archiveTargetStream = fileEntry.Open();
             
-            await fileInStream.CopyToAsync(archiveOutStream);
+            await sourceFileStream.CopyToAsync(archiveTargetStream);
         }
-
-        await this.OutputIgnoredExceptionsAsync(globber.IgnoredFileAccessExceptions.ToList());
     }
 }
