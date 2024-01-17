@@ -33,7 +33,7 @@ internal abstract class Program
 
             IMediator mediator = InitializeDI();
 
-            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, SearchPathArgs, ZipArgs>(args);
+            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, SearchPathArgs, ZipArgs, CopyFilesArgs>(args);
 
             //if (args.Length == 0)
             //{
@@ -46,6 +46,7 @@ internal abstract class Program
                 (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (SearchPathArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (ZipArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (CopyFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (errors) => EExitCode.InvalidApplicationArguments);
 
             return (int)retValue;
@@ -117,12 +118,37 @@ public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryA
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 }
 
-[Verb("zip-files", isDefault: false, ["zip"], HelpText = "Zip Files")]
-public class ZipArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
+[Verb("zip-files", isDefault: false, ["zip"], HelpText = "Copy Files to a Zip Archive")]
+public class ZipArgs : GlobToWriteFileBaseArgs, IGlobToWriteFileAndFactoryArgs, IRequest<EExitCode>
 {
-    [Option('z', "zip-file", Required = true, HelpText = "Zip file to create")]
+    [Option('z', "zip-file", Required = true, HelpText = "Zip file to create or update")]
     public required string ZipFileName { get; set; }
 
+    [Option('r', "replace-files", SetName = "file-exists-replace", Default = false, HelpText = "Toggle replacing files that already exist in the zip file")]
+    public bool ReplaceOnDuplicate { get; set; }
+
+    [Option('e', "error-on-file-exist", SetName = "file-exists-error", Default = false, HelpText = "Toggle erroring if a file already exists in the zip file")]
+    public bool ErrorOnDuplicate { get; set; }
+}
+
+[Verb("copy-files", isDefault: false, ["copy"], HelpText = "Copy Files to Folder")]
+public class CopyFilesArgs : GlobToWriteFileBaseArgs, IGlobToWriteFileAndFactoryArgs, IRequest<EExitCode>
+{
+    [Option('t', "target-path", Required = true, HelpText = "Target folder to copy files to")]
+    public required string TargetFolder { get; set; }
+
+    [Option('r', "replace-files", Default = false, HelpText = "Toggle replacing files that already exist")]
+    public bool ReplaceOnDuplicate { get; set; }
+
+    public bool ErrorOnDuplicate
+    {
+        get => !this.ReplaceOnDuplicate;
+        set => this.ReplaceOnDuplicate = !value;
+    }
+}
+
+public class GlobToWriteFileBaseArgs : BaseArgs
+{
     [Option('b', "base-path", HelpText = "One or more base paths for globbing. Default is the working directory")]
     public required string BasePath
     {
@@ -130,12 +156,6 @@ public class ZipArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
         set => this.BasePaths = ImmutableList<string>.Empty.Add(value);
     }
     public IEnumerable<string> BasePaths { get; set; } = ImmutableList<string>.Empty.Add(".");
-
-    [Option('r', "replace-duplicates", SetName = "zip-duplicate-replace", Default = false, HelpText = "Toggle replacing duplicate files already in the zip file")]
-    public bool ReplaceOnDuplicate { get; set; }
-
-    [Option('e', "error-on-duplicates", SetName = "zip-duplicate-error", Default = false, HelpText = "Toggle erroring if a duplicate file name is already in the zip file")]
-    public bool ErrorOnDuplicate { get; set; }
 }
 
 public abstract class BaseArgs

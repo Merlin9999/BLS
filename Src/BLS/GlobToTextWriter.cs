@@ -10,7 +10,7 @@ public class GlobToTextWriter : AbstractGlobWriter
         this._args = args;
     }
 
-    public async Task ExecuteAsync()
+    public override async Task ExecuteAsync()
     {
         IGlobber globber = GlobberFactory.Create(this._args);
 
