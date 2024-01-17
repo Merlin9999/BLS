@@ -67,12 +67,14 @@ public class GlobToZipWriter : AbstractGlobToFileWriter<ZipArgs>
                 }
             }
 
-            await using var sourceFileStream = File.Open(Path.Combine(this.Args.BasePath, file), FileMode.Open);
-
-            ZipArchiveEntry fileEntry = zipArchive.CreateEntry(file);
-            await using var archiveTargetStream = fileEntry.Open();
+            string sourceFileName = Path.Combine(this.Args.BasePath, file);
+            ZipArchiveEntry targetEntry = zipArchive.CreateEntry(file);
+            
+            await using var sourceFileStream = File.Open(sourceFileName, FileMode.Open);
+            await using var archiveTargetStream = targetEntry.Open();
             
             await sourceFileStream.CopyToAsync(archiveTargetStream);
+            targetEntry.LastWriteTime = File.GetLastWriteTime(sourceFileName);
         }
     }
 }
