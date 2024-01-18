@@ -5,14 +5,14 @@ using DotNet.Globbing;
 
 namespace BLS;
 
-public class ImprovedGlobber : AbstractGlobber
+public class FileGlobber : AbstractGlobber
 {
     // Derived from: https://stackoverflow.com/a/54300816/677612
     // Check out: https://stackoverflow.com/a/34580159/677612
 
     private static readonly Regex DriveOnlyRegex = new Regex("^[a-zA-Z][:]$");
 
-    public ImprovedGlobber(IGlobberArgs args) 
+    public FileGlobber(IGlobberArgs args) 
         : base(args)
     {
         this.Args.IncludeGlobPaths = this.Args.IncludeGlobPaths

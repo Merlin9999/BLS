@@ -9,8 +9,8 @@ namespace BLS.Test
         {
             get
             {
-                yield return new object[] { (IGlobberArgs args) => new SystemGlobber(args) };
-                yield return new object[] { (IGlobberArgs args) => new ImprovedGlobber(args) };
+                yield return new object[] { (IGlobberArgs args) => new SystemFileGlobber(args) };
+                yield return new object[] { (IGlobberArgs args) => new FileGlobber(args) };
                 //yield break;
             }
         }
@@ -19,7 +19,7 @@ namespace BLS.Test
         {
             get
             {
-                yield return new object[] { (IGlobberArgs args) => new ImprovedGlobber(args) };
+                yield return new object[] { (IGlobberArgs args) => new FileGlobber(args) };
                 //yield break;
             }
         }
@@ -102,8 +102,8 @@ namespace BLS.Test
         {
             string includeGlob = "*.exe";
             
-            ImmutableList<string> systemGlobResults = ExecuteGlob(args => new SystemGlobber(args), @"C:\Windows", includeGlob);
-            ImmutableList<string> improvedGlobResults = ExecuteGlob(args => new ImprovedGlobber(args), @"C:\Windows", includeGlob);
+            ImmutableList<string> systemGlobResults = ExecuteGlob(args => new SystemFileGlobber(args), @"C:\Windows", includeGlob);
+            ImmutableList<string> improvedGlobResults = ExecuteGlob(args => new FileGlobber(args), @"C:\Windows", includeGlob);
 
             systemGlobResults.Should().BeEquivalentTo(improvedGlobResults);
         }
@@ -247,7 +247,7 @@ namespace BLS.Test
         [MemberData(nameof(GlobberFactoryMethodsExcludingSystemGlobber))]
         public void FindAllFilesUsingSubfolderAsBaseNonRelativeExcludingTxtFromBase(Func<IGlobberArgs, IGlobber> globberFactory)
         {
-            // SystemGlobber does NOT handle this properly as it end up including ALL files
+            // SystemFileGlobber does NOT handle this properly as it end up including ALL files
 
             string includeGlob = "../**/*";
             string excludeGlob = "**/*.txt";

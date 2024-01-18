@@ -7,7 +7,7 @@ public class FileGlobberFactory
     public static IGlobber Create(IGlobberFactoryArgs factoryArgs, IGlobberArgs args)
     {
         return factoryArgs.UseFrameworkGlobber
-            ? (IGlobber)new SystemGlobber(args)
-            : (IGlobber)new ImprovedGlobber(args);
+            ? (IGlobber)new SystemFileGlobber(args)
+            : (IGlobber)new FileGlobber(args);
     }
 }
