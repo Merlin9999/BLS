@@ -1,6 +1,6 @@
 ﻿namespace BLS;
 
-public class GlobberFactory
+public class FileGlobberFactory
 {
     public static IGlobber Create(IGlobberAndFactoryArgs args) => Create(args, args);
 

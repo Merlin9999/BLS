@@ -30,17 +30,9 @@ internal abstract class Program
             if (args.Length == 0)
                 args = ["--help"];
 
-
             IMediator mediator = InitializeDI();
 
             ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, SearchPathArgs, ZipArgs, CopyFilesArgs>(args);
-
-            //if (args.Length == 0)
-            //{
-            //    HelpText helpText = HelpText.AutoBuild(parserResult, Console.WindowWidth);
-            //    Console.WriteLine(helpText);
-            //    return (int)EExitCode.InvalidApplicationArguments;
-            //}
 
             retValue = parserResult.MapResult(
                 (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
@@ -61,7 +53,6 @@ internal abstract class Program
             Log.CloseAndFlush();
         }
     }
-
     static async Task<EExitCode> AsyncMain<TOptions>(TOptions options)
         where TOptions : IRequest<EExitCode>
     {

@@ -12,7 +12,7 @@ public class GlobToTextWriter : AbstractGlobWriter
 
     public override async Task ExecuteAsync()
     {
-        IGlobber globber = GlobberFactory.Create(this._args);
+        IGlobber globber = FileGlobberFactory.Create(this._args);
 
         IEnumerable<string> files = globber.Execute();
         foreach (string file in files)
