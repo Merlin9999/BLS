@@ -2,6 +2,6 @@
 
 public interface IGlobber
 {
-    IEnumerable<Exception> IgnoredFileAccessExceptions { get; }
+    IEnumerable<Exception> IgnoredAccessExceptions { get; }
     IEnumerable<string> Execute();
 }

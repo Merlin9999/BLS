@@ -18,6 +18,6 @@ public class GlobToTextWriter : AbstractGlobWriter
         foreach (string file in files)
             await this.OutputWriter.WriteLineAsync(file);
 
-        await this.OutputIgnoredExceptionsAsync(globber.IgnoredFileAccessExceptions.ToList());
+        await this.OutputIgnoredExceptionsAsync(globber.IgnoredAccessExceptions.ToList());
     }
 }

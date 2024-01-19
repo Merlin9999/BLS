@@ -28,7 +28,7 @@ public abstract class AbstractGlobToFileWriter<TArgs> : AbstractGlobWriter
 
         await this.WriteFilesAsync(files, comparer);
 
-        await this.OutputIgnoredExceptionsAsync(globber.IgnoredFileAccessExceptions.ToList());
+        await this.OutputIgnoredExceptionsAsync(globber.IgnoredAccessExceptions.ToList());
     }
 
     protected abstract Task WriteFilesAsync(IEnumerable<string> files, StringComparer comparer);
