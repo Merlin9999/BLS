@@ -12,7 +12,7 @@ To Uninstall:
 The optional --prerelease parameter allows prereleases to be installed and updated.
 
 Visit On :
-> [GitHub](https://www.nuget.org/packages/Beyond.LS.Tool)
+> [NuGet](https://www.nuget.org/packages/Beyond.LS.Tool)
 
 Globbing Syntax Help:
 > GitHub [DotNet.Glob](https://github.com/dazinator/DotNet.Glob) Repository Page
