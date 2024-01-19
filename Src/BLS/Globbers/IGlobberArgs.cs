@@ -1,4 +1,4 @@
-﻿namespace BLS;
+﻿namespace BLS.Globbers;
 
 public interface IGlobToWriteFileAndFactoryArgs : IGlobberAndFactoryArgs, IGlobToWriteFile, IGlobberFactoryArgs
 {

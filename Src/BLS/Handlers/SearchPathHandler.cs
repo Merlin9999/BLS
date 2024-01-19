@@ -1,7 +1,8 @@
-﻿using MediatR;
+﻿using BLS.GlobWriters;
+using MediatR;
 using Serilog;
 
-namespace BLS;
+namespace BLS.Handlers;
 
 public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchPathArgs, EExitCode>
 {
@@ -17,8 +18,8 @@ public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchP
         InitBasePathsFromPathEnvironmentVar(request);
         LogArgs(request, this._logger);
 
-        GlobToTextWriter globToTextWriter = new GlobToTextWriter(request, Console.Out);
-        await globToTextWriter.ExecuteAsync();
+        GlobFilesToTextWriter globFilesToTextWriter = new GlobFilesToTextWriter(request, Console.Out);
+        await globFilesToTextWriter.ExecuteAsync();
 
         return EExitCode.Success;
     }

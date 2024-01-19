@@ -1,11 +1,11 @@
 ﻿using System.Collections.Immutable;
 
-namespace BLS;
+namespace BLS.Globbers;
 
 public abstract class AbstractGlobber : IGlobber
 {
     protected readonly IGlobberArgs Args;
-    private ImmutableList<string> _fileCache = ImmutableList<string>.Empty;
+    private ImmutableList<string> _entryCache = [];
 
     private bool? _canOutputImmediately;
     private bool? _useFullyQualifiedOutputPaths;
@@ -24,7 +24,7 @@ public abstract class AbstractGlobber : IGlobber
         this.Args = args;
     }
 
-    public IEnumerable<Exception> IgnoredFileAccessExceptions => this.IgnoredExceptions.Exceptions;
+    public IEnumerable<Exception> IgnoredAccessExceptions => this.IgnoredExceptions.Exceptions;
     protected IgnoredExceptionSet IgnoredExceptions { get; private set; } = new IgnoredExceptionSet();
 
     public IEnumerable<string> Execute()
@@ -36,64 +36,64 @@ public abstract class AbstractGlobber : IGlobber
         if (basePaths.Count < 2)
         {
             string basePath = basePaths.Count < 1 ? "./" : basePaths[0];
-            IEnumerable<string> files = this.FindMatches(basePath, this.IgnoredExceptions);
-            files = this.OutputOrCacheFiles(basePath, files);
-            foreach (string file in files)
-                yield return NormalizePathSeparators(file);
+            IEnumerable<string> entries = this.FindMatches(basePath, this.IgnoredExceptions);
+            entries = this.OutputOrCacheEntries(basePath, entries);
+            foreach (string entry in entries)
+                yield return NormalizePathSeparators(entry);
         }
         else
         {
             foreach (string basePath in basePaths)
             {
-                var ignoredFileAccessExceptions = new List<Exception>();
-                IEnumerable<string> files = this.FindMatches(basePath, this.IgnoredExceptions);
-                files =  this.OutputOrCacheFiles(basePath, files);
-                foreach (string file in files)
-                    yield return NormalizePathSeparators(file);
+                var ignoredAccessExceptions = new List<Exception>();
+                IEnumerable<string> entries = this.FindMatches(basePath, this.IgnoredExceptions);
+                entries =  this.OutputOrCacheEntries(basePath, entries);
+                foreach (string entry in entries)
+                    yield return NormalizePathSeparators(entry);
             }
         }
 
-        // If multiple base paths or sort was explicitly selected, file names were cached 
+        // If multiple base paths or sort was explicitly selected, entry names were cached 
         // and need to be output now.
         if (!this.CanOutputImmediately)
         {
-            List<string> files = this.GetCachedFiles(basePaths);
-            foreach (string file in files)
-                yield return NormalizePathSeparators(file);
+            List<string> entries = this.GetCachedEntries(basePaths);
+            foreach (string entry in entries)
+                yield return NormalizePathSeparators(entry);
         }
     }
 
     protected abstract IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions);
 
-    private IEnumerable<string> OutputOrCacheFiles(string basePath, IEnumerable<string> filePaths)
+    private IEnumerable<string> OutputOrCacheEntries(string basePath, IEnumerable<string> entryPaths)
     {
         if (this.CanOutputImmediately)
         {
-            foreach (string filePath in filePaths)
-                yield return this.GetOutputPath(basePath, filePath);
+            foreach (string entryPath in entryPaths)
+                yield return this.GetOutputPath(basePath, entryPath);
         }
         else
         {
-            IEnumerable<string> allFiles = filePaths
-                .Select(filePath => this.GetOutputPath(basePath, filePath));
-            this._fileCache = this._fileCache.AddRange(allFiles);
+            IEnumerable<string> allEntries = entryPaths
+                .Select(entryPath => this.GetOutputPath(basePath, entryPath));
+            this._entryCache = this._entryCache.AddRange(allEntries);
         }
     }
 
-    private List<string> GetCachedFiles(List<string> basePaths)
+    private List<string> GetCachedEntries(List<string> basePaths)
     {
         StringComparer stringComparer = this.Args.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
         // If multiple base paths, we need to remove duplicates.
-        List<string> filePaths = basePaths.Count > 1
-            ? this._fileCache
+        List<string> entryPaths = basePaths.Count > 1
+            ? this._entryCache
                 .Distinct(stringComparer)
                 .ToList()
-            : this._fileCache.ToList();
+            : this._entryCache.ToList();
 
-        filePaths.Sort(stringComparer);
+        entryPaths.Sort(stringComparer);
 
-        return filePaths;
+        return entryPaths;
     }
 
     private string GetOutputPath(string basePath, string path)
@@ -106,8 +106,8 @@ public abstract class AbstractGlobber : IGlobber
 
     protected class IgnoredExceptionSet
     {
-        private ImmutableHashSet<string> MessageSet { get; set; } = ImmutableHashSet<string>.Empty;
-        public ImmutableList<Exception> Exceptions { get; private set; } = ImmutableList<Exception>.Empty;
+        private ImmutableHashSet<string> MessageSet { get; set; } = [];
+        public ImmutableList<Exception> Exceptions { get; private set; } = [];
 
         public void Add(Exception ignoredException)
         {
@@ -127,13 +127,13 @@ public abstract class AbstractGlobber : IGlobber
             ? ToForwardSlashPathSeparators(path)
             : path;
 
-    public static string BuildRelativeFileName(string fullFileNamePath, DirectoryInfo commonRootDir, DirectoryInfo baseDir)
+    public static string BuildRelativeName(string fullEntryNamePath, DirectoryInfo commonRootDir, DirectoryInfo baseDir)
     {
-        string relativeFileName = Path.GetRelativePath(commonRootDir.FullName, fullFileNamePath);
+        string relativeEntryName = Path.GetRelativePath(commonRootDir.FullName, fullEntryNamePath);
         string prefix = Path.GetRelativePath(baseDir.FullName, commonRootDir.FullName);
         if (prefix != ".")
-            relativeFileName = Path.Combine(prefix, relativeFileName);
-        return relativeFileName;
+            relativeEntryName = Path.Combine(prefix, relativeEntryName);
+        return relativeEntryName;
     }
 
     public static ImmutableList<string> SplitPathIntoSegments(string path)

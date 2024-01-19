@@ -1,6 +1,7 @@
-﻿using Serilog;
+﻿using BLS.Globbers;
+using Serilog;
 
-namespace BLS;
+namespace BLS.Handlers;
 
 public abstract class AbstractGlobberHandler
 {

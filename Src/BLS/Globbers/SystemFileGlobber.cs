@@ -2,13 +2,13 @@
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 
-namespace BLS;
+namespace BLS.Globbers;
 
-public class SystemGlobber : AbstractGlobber
+public class SystemFileGlobber : AbstractGlobber
 {
     private readonly Matcher _matcher;
 
-    public SystemGlobber(IGlobberArgs args) 
+    public SystemFileGlobber(IGlobberArgs args) 
         : base(args)
     {
         this._matcher = CreateMatcher(this.Args);
