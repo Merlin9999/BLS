@@ -15,4 +15,4 @@ Visit On :
 > [GitHub](https://www.nuget.org/packages/Beyond.LS.Tool)
 
 Globbing Syntax Help:
-> [GitHub DotNet.Glob Repository Page](https://github.com/dazinator/DotNet.Glob)
+> GitHub [DotNet.Glob](https://github.com/dazinator/DotNet.Glob) Repository Page
