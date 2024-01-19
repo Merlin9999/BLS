@@ -1,10 +1,10 @@
 ﻿namespace BLS;
 
-public class GlobToTextWriter : AbstractGlobWriter
+public class GlobFilesToTextWriter : AbstractGlobWriter
 {
     private readonly IGlobberAndFactoryArgs _args;
 
-    public GlobToTextWriter(IGlobberAndFactoryArgs args, TextWriter outputWriter)
+    public GlobFilesToTextWriter(IGlobberAndFactoryArgs args, TextWriter outputWriter)
         : base(outputWriter)
     {
         this._args = args;
@@ -12,12 +12,12 @@ public class GlobToTextWriter : AbstractGlobWriter
 
     public override async Task ExecuteAsync()
     {
-        IGlobber globber = GlobberFactory.Create(this._args);
+        IGlobber globber = FileGlobberFactory.Create(this._args);
 
         IEnumerable<string> files = globber.Execute();
         foreach (string file in files)
             await this.OutputWriter.WriteLineAsync(file);
 
-        await this.OutputIgnoredExceptionsAsync(globber.IgnoredFileAccessExceptions.ToList());
+        await this.OutputIgnoredExceptionsAsync(globber.IgnoredAccessExceptions.ToList());
     }
 }

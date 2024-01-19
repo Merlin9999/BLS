@@ -18,7 +18,7 @@ public abstract class AbstractGlobToFileWriter<TArgs> : AbstractGlobWriter
         if (foundParentFolderInIncludes)
             throw new ArgumentException("Avoid using \"..\" folders in glob expressions when creating a zip file!");
 
-        IGlobber globber = GlobberFactory.Create(this.Args);
+        IGlobber globber = FileGlobberFactory.Create(this.Args);
 
         IEnumerable<string> files = globber.Execute();
 
@@ -28,7 +28,7 @@ public abstract class AbstractGlobToFileWriter<TArgs> : AbstractGlobWriter
 
         await this.WriteFilesAsync(files, comparer);
 
-        await this.OutputIgnoredExceptionsAsync(globber.IgnoredFileAccessExceptions.ToList());
+        await this.OutputIgnoredExceptionsAsync(globber.IgnoredAccessExceptions.ToList());
     }
 
     protected abstract Task WriteFilesAsync(IEnumerable<string> files, StringComparer comparer);
