@@ -5,7 +5,7 @@ namespace BLS.Globbers;
 public abstract class AbstractGlobber : IGlobber
 {
     protected readonly IGlobberArgs Args;
-    private ImmutableList<string> _entryCache = ImmutableList<string>.Empty;
+    private ImmutableList<string> _entryCache = [];
 
     private bool? _canOutputImmediately;
     private bool? _useFullyQualifiedOutputPaths;
@@ -106,8 +106,8 @@ public abstract class AbstractGlobber : IGlobber
 
     protected class IgnoredExceptionSet
     {
-        private ImmutableHashSet<string> MessageSet { get; set; } = ImmutableHashSet<string>.Empty;
-        public ImmutableList<Exception> Exceptions { get; private set; } = ImmutableList<Exception>.Empty;
+        private ImmutableHashSet<string> MessageSet { get; set; } = [];
+        public ImmutableList<Exception> Exceptions { get; private set; } = [];
 
         public void Add(Exception ignoredException)
         {

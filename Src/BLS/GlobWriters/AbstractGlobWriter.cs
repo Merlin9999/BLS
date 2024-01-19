@@ -2,6 +2,7 @@
 
 public abstract class AbstractGlobWriter
 {
+    protected static readonly string[] ParentFolderAsArray = [".."];
     protected TextWriter OutputWriter { get; }
 
     protected AbstractGlobWriter(TextWriter outputWriter)
@@ -19,7 +20,7 @@ public abstract class AbstractGlobWriter
         foreach (Exception exception in ignoredFileAccessExceptions)
             await this.OutputWriter.WriteLineAsync($"   {TranslateAggregateException(exception).Message}");
 
-        Exception TranslateAggregateException(Exception exc)
+        static Exception TranslateAggregateException(Exception exc)
         {
             if (exc is AggregateException agg && agg.InnerExceptions.Count == 1)
                 return agg.InnerExceptions[0];

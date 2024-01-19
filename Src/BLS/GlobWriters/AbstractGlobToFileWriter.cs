@@ -16,7 +16,7 @@ public abstract class AbstractGlobToFileWriter<TArgs> : AbstractGlobWriter
     public override async Task ExecuteAsync()
     {
         bool foundParentFolderInIncludes = this.Args.IncludeGlobPaths
-            .Any(p => AbstractGlobber.SplitPathAndNormalizeRelativeSegments(p).StartsWith(new[] { ".." }));
+            .Any(p => AbstractGlobber.SplitPathAndNormalizeRelativeSegments(p).StartsWith(ParentFolderAsArray));
         if (foundParentFolderInIncludes)
             throw new ArgumentException("Avoid using \"..\" folders in glob expressions when creating a zip file!");
 
