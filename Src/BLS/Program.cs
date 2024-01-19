@@ -33,7 +33,7 @@ internal abstract class Program
 
             IMediator mediator = InitializeDI();
 
-            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs>(args);
+            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs, GlobHelpArgs>(args);
 
             retValue = parserResult.MapResult(
                 (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
@@ -41,6 +41,7 @@ internal abstract class Program
                 (SearchPathArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (ZipArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (CopyFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (GlobHelpArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (errors) => EExitCode.InvalidApplicationArguments);
 
             return (int)retValue;
@@ -95,6 +96,11 @@ internal abstract class Program
 
         return logger;
     }
+}
+
+[Verb("glob-help", isDefault: false, ["glob"], HelpText = "Open a browser to a web page on related glob formatting.")]
+public class GlobHelpArgs : IRequest<EExitCode>
+{
 }
 
 [Verb("list-files", isDefault: true, ["files"], HelpText = "List Files")]
