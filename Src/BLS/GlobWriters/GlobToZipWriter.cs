@@ -1,7 +1,7 @@
-﻿using BLS;
-using System.IO.Compression;
+﻿using System.IO.Compression;
+using BLS.Globbers;
 
-namespace BLS;
+namespace BLS.GlobWriters;
 
 public class GlobToZipWriter : AbstractGlobToFileWriter<ZipArgs>
 {

@@ -3,15 +3,16 @@ using System.Security;
 using System.Text.RegularExpressions;
 using DotNet.Globbing;
 
-namespace BLS;
+namespace BLS.Globbers;
 
-public abstract class AbstractImprovedGlobber<TFileSysInfo> : AbstractGlobber
+public abstract partial class AbstractImprovedGlobber<TFileSysInfo> : AbstractGlobber
     where TFileSysInfo : FileSystemInfo
 {
     // Derived from: https://stackoverflow.com/a/54300816/677612
     // Check out: https://stackoverflow.com/a/34580159/677612
 
-    private static readonly Regex DriveOnlyRegex = new Regex("^[a-zA-Z][:]$");
+    [GeneratedRegex("^[a-zA-Z][:]$")]
+    private static partial Regex GetDriveOnlyRegex();
 
     protected AbstractImprovedGlobber(IGlobberArgs args) 
         : base(args)
@@ -38,7 +39,7 @@ public abstract class AbstractImprovedGlobber<TFileSysInfo> : AbstractGlobber
 
         string normalizedBasePath = ToBackSlashPathSeparators(basePath);
 
-        DirectoryInfo baseDir = new DirectoryInfo(normalizedBasePath);
+        DirectoryInfo baseDir = new(normalizedBasePath);
         DirectoryInfo commonRootDir = this.DetermineCommonRootPathFromBasePathAndIncludes(baseDir, stringComparer);
 
         ImmutableList<IncludeGlobber> includeInfos = this.Args.IncludeGlobPaths
@@ -119,7 +120,7 @@ public abstract class AbstractImprovedGlobber<TFileSysInfo> : AbstractGlobber
         }
     }
 
-    protected DirectoryInfo DetermineCommonRootPathFromBasePathAndIncludes(DirectoryInfo basePath, StringComparer comparer)
+    private DirectoryInfo DetermineCommonRootPathFromBasePathAndIncludes(DirectoryInfo basePath, StringComparer comparer)
     {
         var rootDirectoryList = this.Args.IncludeGlobPaths
             .Select(p => new { Path = p, RelativePathPrefix = GetParentRelativePrefix(p) })
@@ -142,15 +143,16 @@ public abstract class AbstractImprovedGlobber<TFileSysInfo> : AbstractGlobber
             .Where(pathSegsToMatch => rootPathSegmentsList.All(pathSegs => pathSegs.StartsWith(pathSegsToMatch, comparer)));
 
         string commonRootPath = Path.Combine(matchingPathSegments.First().ToArray());
-        if (DriveOnlyRegex.IsMatch(commonRootPath))
-            commonRootPath = commonRootPath + '\\';
-        else if (Path.IsPathRooted(commonRootPath) && !(commonRootPath.EndsWith('\\') || commonRootPath.EndsWith('/')))
-            commonRootPath = commonRootPath + '\\';
+        if (GetDriveOnlyRegex().IsMatch(commonRootPath))
+            commonRootPath += Path.DirectorySeparatorChar;
+        else if (Path.IsPathRooted(commonRootPath) && 
+                 !(commonRootPath.EndsWith(Path.DirectorySeparatorChar) || commonRootPath.EndsWith(Path.AltDirectorySeparatorChar)))
+            commonRootPath += Path.DirectorySeparatorChar;
 
         return new DirectoryInfo(commonRootPath);
     }
 
-    protected static string GetParentRelativePrefix(string path)
+    private static string GetParentRelativePrefix(string path)
     {
         var segments = SplitPathIntoSegments(path);
         int index = GetIndexOfLastSpecialFolder();

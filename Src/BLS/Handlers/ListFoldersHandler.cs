@@ -1,7 +1,8 @@
-﻿using MediatR;
+﻿using BLS.GlobWriters;
+using MediatR;
 using Serilog;
 
-namespace BLS;
+namespace BLS.Handlers;
 
 public class ListFoldersHandler : AbstractGlobberHandler, IRequestHandler<ListFoldersArgs, EExitCode>
 {

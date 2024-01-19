@@ -1,35 +1,28 @@
 using System.Collections.Immutable;
+using BLS.Globbers;
 using FluentAssertions;
 
 namespace BLS.Test
 {
     public class GlobberTests
     {
-        public static IEnumerable<object[]> AllGlobberFactoryMethods
-        {
-            get
-            {
-                yield return new object[] { (IGlobberArgs args) => new SystemFileGlobber(args) };
-                yield return new object[] { (IGlobberArgs args) => new FileGlobber(args) };
-                //yield break;
-            }
-        }
+        public static TheoryData<Func<IGlobberArgs, IGlobber>> AllGlobberFactoryMethods =>
+            new([
+                (IGlobberArgs args) => new SystemFileGlobber(args),
+                (IGlobberArgs args) => new FileGlobber(args)
+            ]);
 
-        public static IEnumerable<object[]> GlobberFactoryMethodsExcludingSystemGlobber
-        {
-            get
-            {
-                yield return new object[] { (IGlobberArgs args) => new FileGlobber(args) };
-                //yield break;
-            }
-        }
+        public static TheoryData<Func<IGlobberArgs, IGlobber>> GlobberFactoryMethodsExcludingSystemGlobber =>
+            new([
+                (IGlobberArgs args) => new FileGlobber(args)
+            ]);
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
         public void FindSpecificFileNameWhereExists(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "FolderLevel1.txt";
-            string[] expected = new[] { includeGlob };
+            string[] expected = [includeGlob];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
@@ -39,7 +32,7 @@ namespace BLS.Test
         public void FindSpecificFileNameWhereExistsUsingSubfolderAsBase(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "../FolderLevel1.txt";
-            string[] expected = new[] { includeGlob };
+            string[] expected = [includeGlob];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles/SubFolder1", includeGlob);
         }
@@ -49,7 +42,7 @@ namespace BLS.Test
         public void FindSpecificFileNameWhereDoesNotExist(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "DoesNotExist.txt";
-            string[] expected = new string[] { };
+            string[] expected = [];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
@@ -59,12 +52,12 @@ namespace BLS.Test
         public void FindAllFilesInBaseFolder(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "*";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
                 "FolderLevel1.md",
-                "FolderLevel1_DifferentBaseName.txt",
-            };
+                "FolderLevel1_DifferentBaseName.txt"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
@@ -74,11 +67,11 @@ namespace BLS.Test
         public void FindAllFilesInBaseFolderWithSameBaseName(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "FolderLevel1.*";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
-                "FolderLevel1.md",
-            };
+                "FolderLevel1.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
@@ -88,11 +81,11 @@ namespace BLS.Test
         public void FindAllFilesInBaseFolderWithSameExtension(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "*.txt";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
-                "FolderLevel1_DifferentBaseName.txt",
-            };
+                "FolderLevel1_DifferentBaseName.txt"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
@@ -113,8 +106,8 @@ namespace BLS.Test
         public void FindAllFiles(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "**/*";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
                 "FolderLevel1.md",
                 "FolderLevel1_DifferentBaseName.txt",
@@ -123,8 +116,8 @@ namespace BLS.Test
                 "SubFolder2/SubFolder2_FolderLevel2.txt",
                 "SubFolder2/SubFolder2_FolderLevel2.md",
                 "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
-                "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
-            };
+                "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
@@ -135,13 +128,13 @@ namespace BLS.Test
         {
             string includeGlob = "**/*";
             string excludeGlob = "**/*.txt";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.md",
                 "SubFolder1/SubFolder1_FolderLevel2.md",
                 "SubFolder2/SubFolder2_FolderLevel2.md",
-                "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
-            };
+                "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
         }
@@ -152,16 +145,16 @@ namespace BLS.Test
         {
             string includeGlob = "**/*";
             string excludeGlob = "SubFolder2/SubSubFolder2";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
                 "FolderLevel1.md",
                 "FolderLevel1_DifferentBaseName.txt",
                 "SubFolder1/SubFolder1_FolderLevel2.txt",
                 "SubFolder1/SubFolder1_FolderLevel2.md",
                 "SubFolder2/SubFolder2_FolderLevel2.txt",
-                "SubFolder2/SubFolder2_FolderLevel2.md",
-            };
+                "SubFolder2/SubFolder2_FolderLevel2.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
         }
@@ -172,16 +165,16 @@ namespace BLS.Test
         {
             string includeGlob = "**/*";
             string excludeGlob = "SubFolder2/SubSubFolder2/**";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
                 "FolderLevel1.md",
                 "FolderLevel1_DifferentBaseName.txt",
                 "SubFolder1/SubFolder1_FolderLevel2.txt",
                 "SubFolder1/SubFolder1_FolderLevel2.md",
                 "SubFolder2/SubFolder2_FolderLevel2.txt",
-                "SubFolder2/SubFolder2_FolderLevel2.md",
-            };
+                "SubFolder2/SubFolder2_FolderLevel2.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
         }
@@ -192,14 +185,14 @@ namespace BLS.Test
         {
             string includeGlob = "**/*";
             string excludeGlob = "SubFolder2/**";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
                 "FolderLevel1.md",
                 "FolderLevel1_DifferentBaseName.txt",
                 "SubFolder1/SubFolder1_FolderLevel2.txt",
-                "SubFolder1/SubFolder1_FolderLevel2.md",
-            };
+                "SubFolder1/SubFolder1_FolderLevel2.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob, excludeGlob);
         }
@@ -209,8 +202,8 @@ namespace BLS.Test
         public void FindAllFilesUsingSubfolderAsBase(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "../**/*";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "../FolderLevel1.txt",
                 "../FolderLevel1.md",
                 "../FolderLevel1_DifferentBaseName.txt",
@@ -219,8 +212,8 @@ namespace BLS.Test
                 "../SubFolder2/SubFolder2_FolderLevel2.txt",
                 "../SubFolder2/SubFolder2_FolderLevel2.md",
                 "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
-                "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
-            };
+                "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob);
         }
@@ -231,13 +224,13 @@ namespace BLS.Test
         {
             string includeGlob = "../**/*";
             string excludeGlob = "../**/*.txt";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "../FolderLevel1.md",
                 "../SubFolder1/SubFolder1_FolderLevel2.md",
                 "../SubFolder2/SubFolder2_FolderLevel2.md",
-                "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
-            };
+                "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob, excludeGlob);
         }
@@ -251,16 +244,16 @@ namespace BLS.Test
 
             string includeGlob = "../**/*";
             string excludeGlob = "**/*.txt";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "../FolderLevel1.txt",
                 "../FolderLevel1.md",
                 "../FolderLevel1_DifferentBaseName.txt",
                 "../SubFolder1/SubFolder1_FolderLevel2.txt",
                 "../SubFolder1/SubFolder1_FolderLevel2.md",
                 "../SubFolder2/SubFolder2_FolderLevel2.md",
-                "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
-            };
+                "../SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles/SubFolder2", includeGlob, excludeGlob);
         }
@@ -270,8 +263,8 @@ namespace BLS.Test
         public void FindAllFilesAlternate(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "**";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
                 "FolderLevel1.md",
                 "FolderLevel1_DifferentBaseName.txt",
@@ -280,8 +273,8 @@ namespace BLS.Test
                 "SubFolder2/SubFolder2_FolderLevel2.txt",
                 "SubFolder2/SubFolder2_FolderLevel2.md",
                 "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
-                "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md",
-            };
+                "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.md"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
@@ -291,14 +284,14 @@ namespace BLS.Test
         public void FindAllFilesWithSameExtension(Func<IGlobberArgs, IGlobber> globberFactory)
         {
             string includeGlob = "**/*.txt";
-            string[] expected = new[]
-            {
+            string[] expected =
+            [
                 "FolderLevel1.txt",
                 "FolderLevel1_DifferentBaseName.txt",
                 "SubFolder1/SubFolder1_FolderLevel2.txt",
                 "SubFolder2/SubFolder2_FolderLevel2.txt",
-                "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt",
-            };
+                "SubFolder2/SubSubFolder2/SubSubFolder2_FolderLevel3.txt"
+            ];
 
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
@@ -317,7 +310,7 @@ namespace BLS.Test
             {
                 BasePaths = new[] { basePath },
                 IncludeGlobPaths = new[] { includeGlob },
-                ExcludeGlobPaths = excludeGlob == null ? new string[] { } : new[] { excludeGlob },
+                ExcludeGlobPaths = excludeGlob == null ? [] : new[] { excludeGlob },
             };
 
             if (updateArgsFunc != null)
