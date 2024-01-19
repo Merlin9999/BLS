@@ -16,8 +16,8 @@ public class ListFilesHandler : AbstractGlobberHandler, IRequestHandler<ListFile
     {
         LogArgs(request, this._logger);
 
-        GlobToTextWriter globToTextWriter = new GlobToTextWriter(request, Console.Out);
-        await globToTextWriter.ExecuteAsync();
+        var globFilesToTextWriter = new GlobFilesToTextWriter(request, Console.Out);
+        await globFilesToTextWriter.ExecuteAsync();
 
         return EExitCode.Success;
     }

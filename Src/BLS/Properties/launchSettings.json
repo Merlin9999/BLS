@@ -62,6 +62,10 @@
     "BLS - Copy with Replace": {
       "commandName": "Project",
       "commandLineArgs": "copy **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -t CopiedFiles -r"
+    },
+    "BLS - Project Folders": {
+      "commandName": "Project",
+      "commandLineArgs": "folders ..\\..\\..\\**\\*"
     }
   }
 }

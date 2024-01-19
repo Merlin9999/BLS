@@ -32,10 +32,11 @@ internal abstract class Program
 
             IMediator mediator = InitializeDI();
 
-            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, SearchPathArgs, ZipArgs, CopyFilesArgs>(args);
+            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs>(args);
 
             retValue = parserResult.MapResult(
                 (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (ListFoldersArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (SearchPathArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (ZipArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (CopyFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
@@ -97,6 +98,14 @@ internal abstract class Program
 
 [Verb("list-files", isDefault: true, ["files"], HelpText = "List Files")]
 public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
+{
+    [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
+    public IEnumerable<string> BasePaths { get; set; } = new List<string>();
+
+}
+
+[Verb("list-folders", isDefault: false, ["folders"], HelpText = "List Folders")]
+public class ListFoldersArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
 {
     [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();

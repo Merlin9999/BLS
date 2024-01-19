@@ -1,10 +1,10 @@
 ﻿namespace BLS;
 
-public class GlobToTextWriter : AbstractGlobWriter
+public class GlobFilesToTextWriter : AbstractGlobWriter
 {
     private readonly IGlobberAndFactoryArgs _args;
 
-    public GlobToTextWriter(IGlobberAndFactoryArgs args, TextWriter outputWriter)
+    public GlobFilesToTextWriter(IGlobberAndFactoryArgs args, TextWriter outputWriter)
         : base(outputWriter)
     {
         this._args = args;
