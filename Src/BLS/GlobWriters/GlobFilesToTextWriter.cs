@@ -2,19 +2,12 @@
 
 namespace BLS.GlobWriters;
 
-public class GlobFilesToTextWriter : AbstractGlobWriter
+public class GlobFilesToTextWriter(IGlobberAndFactoryArgs args, TextWriter outputWriter)
+    : AbstractGlobWriter(outputWriter)
 {
-    private readonly IGlobberAndFactoryArgs _args;
-
-    public GlobFilesToTextWriter(IGlobberAndFactoryArgs args, TextWriter outputWriter)
-        : base(outputWriter)
-    {
-        this._args = args;
-    }
-
     public override async Task ExecuteAsync()
     {
-        IGlobber globber = FileGlobberFactory.Create(this._args);
+        IGlobber globber = FileGlobberFactory.Create(args);
 
         IEnumerable<string> files = globber.Execute();
         foreach (string file in files)

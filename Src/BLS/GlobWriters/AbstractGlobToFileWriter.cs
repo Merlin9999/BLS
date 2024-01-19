@@ -2,16 +2,11 @@
 
 namespace BLS.GlobWriters;
 
-public abstract class AbstractGlobToFileWriter<TArgs> : AbstractGlobWriter
+public abstract class AbstractGlobToFileWriter<TArgs>(TArgs args, TextWriter outputWriter)
+    : AbstractGlobWriter(outputWriter)
     where TArgs : IGlobToWriteFileAndFactoryArgs
 {
-    protected readonly TArgs Args;
-
-    protected AbstractGlobToFileWriter(TArgs args, TextWriter outputWriter) 
-        : base(outputWriter)
-    {
-        this.Args = args;
-    }
+    protected readonly TArgs Args = args;
 
     public override async Task ExecuteAsync()
     {

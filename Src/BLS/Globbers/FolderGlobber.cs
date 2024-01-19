@@ -3,12 +3,8 @@ using DotNet.Globbing;
 
 namespace BLS.Globbers;
 
-public class FolderGlobber : AbstractImprovedGlobber<DirectoryInfo>
+public class FolderGlobber(IGlobberArgs args) : AbstractImprovedGlobber<DirectoryInfo>(args)
 {
-    public FolderGlobber(IGlobberArgs args) : base(args)
-    {
-    }
-
     protected override IEnumerable<DirectoryInfo> EnumerateAllEntries(DirectoryInfo dirInfo, ImmutableList<IncludeGlobber> includeInfos,
         ImmutableList<Glob> excludeGlobs, DirectoryInfo commonRootDir, DirectoryInfo baseDir, IgnoredExceptionSet ignoredExceptions)
     {

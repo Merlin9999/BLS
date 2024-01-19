@@ -4,18 +4,11 @@ using Serilog;
 
 namespace BLS.Handlers;
 
-public class ListFoldersHandler : AbstractGlobberHandler, IRequestHandler<ListFoldersArgs, EExitCode>
+public class ListFoldersHandler(ILogger logger) : AbstractGlobberHandler, IRequestHandler<ListFoldersArgs, EExitCode>
 {
-    private readonly ILogger _logger;
-
-    public ListFoldersHandler(ILogger logger)
-    {
-        this._logger = logger;
-    }
-
     public async Task<EExitCode> Handle(ListFoldersArgs request, CancellationToken cancellationToken)
     {
-        LogArgs(request, this._logger);
+        LogArgs(request, logger);
 
         var globFilesToTextWriter = new GlobFoldersToTextWriter(request, Console.Out);
         await globFilesToTextWriter.ExecuteAsync();
