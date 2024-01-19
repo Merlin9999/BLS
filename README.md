@@ -9,6 +9,6 @@ To Update:
 To Uninstall:
 > dotnet tool uninstall Beyond.LS.Tool --global
 
-The --prerelease parameter allows prereleases to be installed and updated.
+The optional --prerelease parameter allows prereleases to be installed and updated.
 
 Visit on [GitHub](https://www.nuget.org/packages/Beyond.LS.Tool)
