@@ -33,7 +33,7 @@ internal abstract class Program
 
             IMediator mediator = InitializeDI();
 
-            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs>(args);
+            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs, GlobHelpArgs>(args);
 
             retValue = parserResult.MapResult(
                 (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
@@ -41,6 +41,7 @@ internal abstract class Program
                 (SearchPathArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (ZipArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (CopyFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (GlobHelpArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (errors) => EExitCode.InvalidApplicationArguments);
 
             return (int)retValue;
@@ -97,26 +98,35 @@ internal abstract class Program
     }
 }
 
+[Verb("glob-help", isDefault: false, ["glob"], HelpText = "Open a browser to a web page on related glob formatting.")]
+public class GlobHelpArgs : IRequest<EExitCode>
+{
+}
+
 [Verb("list-files", isDefault: true, ["files"], HelpText = "List Files")]
 public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
 {
     [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
+    [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
+    public bool UseFrameworkGlobber { get; set; }
 }
 
 [Verb("list-folders", isDefault: false, ["folders"], HelpText = "List Folders")]
-public class ListFoldersArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
+public class ListFoldersArgs : BaseArgs, IRequest<EExitCode>, IGlobberArgs
 {
     [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
-
 }
 
 [Verb("search-path", isDefault: false, ["path"], HelpText = "Search Path")]
 public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
 {
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
+
+    [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
+    public bool UseFrameworkGlobber { get; set; }
 }
 
 [Verb("zip-files", isDefault: false, ["zip"], HelpText = "Copy Files to a Zip Archive")]
@@ -130,6 +140,9 @@ public class ZipArgs : GlobToWriteFileBaseArgs, IGlobToWriteFileAndFactoryArgs, 
 
     [Option('e', "error-on-file-exist", SetName = "file-exists-error", Default = false, HelpText = "Toggle erroring if a file already exists in the zip file")]
     public bool ErrorOnDuplicate { get; set; }
+
+    [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
+    public bool UseFrameworkGlobber { get; set; }
 }
 
 [Verb("copy-files", isDefault: false, ["copy"], HelpText = "Copy Files to Folder")]
@@ -146,6 +159,9 @@ public class CopyFilesArgs : GlobToWriteFileBaseArgs, IGlobToWriteFileAndFactory
         get => !this.ReplaceOnDuplicate;
         set => this.ReplaceOnDuplicate = !value;
     }
+
+    [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
+    public bool UseFrameworkGlobber { get; set; }
 }
 
 public class GlobToWriteFileBaseArgs : BaseArgs
@@ -181,7 +197,4 @@ public abstract class BaseArgs
 
     [Option('a', "abort-on-access-errors", Default = false, HelpText = "Toggle abort on file system access errors")]
     public bool AbortOnFileSystemAccessExceptions { get; set; }
-
-    [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
-    public bool UseFrameworkGlobber { get; set; }
 }

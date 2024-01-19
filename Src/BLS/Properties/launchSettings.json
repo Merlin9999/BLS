@@ -66,6 +66,10 @@
     "BLS - Project Folders": {
       "commandName": "Project",
       "commandLineArgs": "folders ..\\..\\..\\**\\*"
+    },
+    "BLS - Glob Help": {
+      "commandName": "Project",
+      "commandLineArgs": "glob"
     }
   }
 }
