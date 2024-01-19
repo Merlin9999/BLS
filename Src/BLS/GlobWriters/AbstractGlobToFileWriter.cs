@@ -1,4 +1,6 @@
-﻿namespace BLS;
+﻿using BLS.Globbers;
+
+namespace BLS.GlobWriters;
 
 public abstract class AbstractGlobToFileWriter<TArgs> : AbstractGlobWriter
     where TArgs : IGlobToWriteFileAndFactoryArgs

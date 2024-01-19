@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace BLS;
+namespace BLS.Globbers;
 
 public abstract class AbstractGlobber : IGlobber
 {

@@ -1,4 +1,4 @@
-﻿namespace BLS;
+﻿namespace BLS.Globbers;
 
 public class FileGlobberFactory
 {

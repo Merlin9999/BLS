@@ -1,4 +1,4 @@
-﻿namespace BLS;
+﻿namespace BLS.GlobWriters;
 
 public class GlobAndCopyFilesWriter : AbstractGlobToFileWriter<CopyFilesArgs>
 {

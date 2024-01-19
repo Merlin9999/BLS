@@ -3,7 +3,7 @@ using System.Security;
 using System.Text.RegularExpressions;
 using DotNet.Globbing;
 
-namespace BLS;
+namespace BLS.Globbers;
 
 public abstract class AbstractImprovedGlobber<TFileSysInfo> : AbstractGlobber
     where TFileSysInfo : FileSystemInfo

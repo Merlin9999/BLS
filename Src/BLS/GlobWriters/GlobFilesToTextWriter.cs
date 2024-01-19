@@ -1,4 +1,6 @@
-﻿namespace BLS;
+﻿using BLS.Globbers;
+
+namespace BLS.GlobWriters;
 
 public class GlobFilesToTextWriter : AbstractGlobWriter
 {

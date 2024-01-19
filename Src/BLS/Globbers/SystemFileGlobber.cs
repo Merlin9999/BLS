@@ -2,7 +2,7 @@
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 
-namespace BLS;
+namespace BLS.Globbers;
 
 public class SystemFileGlobber : AbstractGlobber
 {

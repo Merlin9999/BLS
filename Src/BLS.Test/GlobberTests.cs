@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using BLS.Globbers;
 using FluentAssertions;
 
 namespace BLS.Test
