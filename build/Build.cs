@@ -147,7 +147,7 @@ class Build : NukeBuild
                 .SetVersion(GitVersion.NuGetVersion)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
+                .SetInformationalVersion(GitVersion.FullSemVer)
             );
         });
 
@@ -177,7 +177,7 @@ class Build : NukeBuild
                 .SetVersion(GitVersion.NuGetVersionV2)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
+                .SetInformationalVersion(GitVersion.FullSemVer)
                 .SetOutputDirectory(OutputDirectory)
             );
         });
@@ -250,7 +250,7 @@ class Build : NukeBuild
             "Unable to determine configuration by branch or local override parameter!");
     }
 
-    private Configuration GetConfigurationOverrideParameters()
+    Configuration GetConfigurationOverrideParameters()
     {
         // If this is NOT a local build (e.g. CI Server), command line overrides are not allowed.
         if (IsLocalBuild)
