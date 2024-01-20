@@ -23,6 +23,7 @@ using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
+using System.Globalization;
 
 
 [GitHubActions(
@@ -147,7 +148,8 @@ class Build : NukeBuild
                 .SetVersion(GitVersion.NuGetVersion)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
+                .SetInformationalVersion(GitVersion.FullSemVer)
+                //.SetCopyright(BuildCopyright())
             );
         });
 
@@ -177,8 +179,9 @@ class Build : NukeBuild
                 .SetVersion(GitVersion.NuGetVersionV2)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
+                .SetInformationalVersion(GitVersion.FullSemVer)
                 .SetOutputDirectory(OutputDirectory)
+                //.SetCopyright(BuildCopyright())
             );
         });
 
@@ -250,7 +253,14 @@ class Build : NukeBuild
             "Unable to determine configuration by branch or local override parameter!");
     }
 
-    private Configuration GetConfigurationOverrideParameters()
+    string BuildCopyright()
+    {
+        CultureInfo enUS = new CultureInfo("en-US");
+        DateTime date = DateTime.ParseExact(GitVersion.CommitDate, "yyyy-MM-dd", enUS, DateTimeStyles.None);
+        return $"Copyright (c) {date.Year} Marc Behnke, All Rights Reserved";
+    }
+
+    Configuration GetConfigurationOverrideParameters()
     {
         // If this is NOT a local build (e.g. CI Server), command line overrides are not allowed.
         if (IsLocalBuild)
