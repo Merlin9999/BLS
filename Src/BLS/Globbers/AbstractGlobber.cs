@@ -30,6 +30,8 @@ public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
 
         if (basePaths.Count < 2)
         {
+            this.FixUpIncludesAndBasePathForSingleRootedIncludeGlob(ref basePaths);
+
             string basePath = basePaths.Count < 1 ? "./" : basePaths[0];
             IEnumerable<string> entries = this.FindMatches(basePath, this.IgnoredExceptions);
             entries = this.OutputOrCacheEntries(basePath, entries);
@@ -40,7 +42,6 @@ public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
         {
             foreach (string basePath in basePaths)
             {
-                var ignoredAccessExceptions = new List<Exception>();
                 IEnumerable<string> entries = this.FindMatches(basePath, this.IgnoredExceptions);
                 entries =  this.OutputOrCacheEntries(basePath, entries);
                 foreach (string entry in entries)
@@ -56,6 +57,28 @@ public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
             foreach (string entry in entries)
                 yield return NormalizePathSeparators(entry);
         }
+    }
+
+    private void FixUpIncludesAndBasePathForSingleRootedIncludeGlob(ref List<string> basePaths)
+    {
+        if (basePaths.Count > 0)
+            return;
+
+        if (this.Args.IncludeGlobPaths.Count() != 1)
+            return;
+
+        string singleIncludeGlob = this.Args.IncludeGlobPaths.First();
+
+        if (!Path.IsPathRooted(singleIncludeGlob))
+            return;
+        
+        string rootedBasePath = Path.GetPathRoot(singleIncludeGlob) 
+            ?? throw new NotSupportedException($"The path \"{singleIncludeGlob}\" was expected to be rooted!");
+        string relativeGlobPath = Path.GetRelativePath(rootedBasePath, singleIncludeGlob);
+
+        basePaths.Add(rootedBasePath);
+        this.Args.IncludeGlobPaths = ImmutableList<string>.Empty.Add(relativeGlobPath);
+        this.Args.UseFullyQualifiedPaths = true;
     }
 
     protected abstract IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions);
@@ -134,7 +157,6 @@ public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
     public static ImmutableList<string> SplitPathIntoSegments(string path)
     {
         return path.Split('/', '\\')
-            .Where(s => s.Trim() != string.Empty)
             .ToImmutableList();
     }
 

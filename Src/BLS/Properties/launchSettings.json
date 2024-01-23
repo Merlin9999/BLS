@@ -70,6 +70,14 @@
     "BLS - Glob Help": {
       "commandName": "Project",
       "commandLineArgs": "glob"
+    },
+    "BLS - C:\\ Rooted Glob": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\marcb\\.dotnet\\tools\\**\\bls.dll"
+    },
+    "BLS - \\ Rooted Glob": {
+      "commandName": "Project",
+      "commandLineArgs": "\\Users\\marcb\\.dotnet\\tools\\**\\bls.dll"
     }
   }
 }
