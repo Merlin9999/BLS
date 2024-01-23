@@ -12,7 +12,7 @@ namespace BLS.Handlers
     {
         public Task<EExitCode> Handle(GlobHelpArgs request, CancellationToken cancellationToken)
         {
-            System.Diagnostics.Process.Start(new ProcessStartInfo
+            Process.Start(new ProcessStartInfo
             {
                 FileName = "https://github.com/Merlin9999/DotNet.Glob/blob/develop/README.md",
                 UseShellExecute = true

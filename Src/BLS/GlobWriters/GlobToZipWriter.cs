@@ -3,13 +3,9 @@ using BLS.Globbers;
 
 namespace BLS.GlobWriters;
 
-public class GlobToZipWriter : AbstractGlobToFileWriter<ZipArgs>
+public class GlobToZipWriter(ZipArgs args, TextWriter outputWriter)
+    : AbstractGlobToFileWriter<ZipArgs>(args, outputWriter)
 {
-    public GlobToZipWriter(ZipArgs args, TextWriter outputWriter)
-        : base(args, outputWriter)
-    {
-    }
-
     protected override async Task WriteFilesAsync(IEnumerable<string> files, StringComparer comparer)
     {
         bool duplicateFileInZipHandling = this.Args.ReplaceOnDuplicate || this.Args.ErrorOnDuplicate;

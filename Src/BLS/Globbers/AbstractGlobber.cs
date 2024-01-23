@@ -2,9 +2,9 @@
 
 namespace BLS.Globbers;
 
-public abstract class AbstractGlobber : IGlobber
+public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
 {
-    protected readonly IGlobberArgs Args;
+    protected readonly IGlobberArgs Args = args;
     private ImmutableList<string> _entryCache = [];
 
     private bool? _canOutputImmediately;
@@ -18,11 +18,6 @@ public abstract class AbstractGlobber : IGlobber
     private bool CanOutputImmediately => this._canOutputImmediately ??= !this.Args.Sort && (this.Args.AllowDuplicatesWhenMultipleBasePaths || this.Args.BasePaths.Count() <= 1);
     private static bool NormalizeToBackSlashPathSeparators => _normalizeToBackSlashPathSeparators ??= Path.DirectorySeparatorChar == '\\' && Path.AltDirectorySeparatorChar == '/';
     private static bool NormalizeToForwardSlashPathSeparators => _normalizeToForwardSlashPathSeparators ??= Path.DirectorySeparatorChar == '/' && Path.AltDirectorySeparatorChar == '\\';
-    
-    protected AbstractGlobber(IGlobberArgs args)
-    {
-        this.Args = args;
-    }
 
     public IEnumerable<Exception> IgnoredAccessExceptions => this.IgnoredExceptions.Exceptions;
     protected IgnoredExceptionSet IgnoredExceptions { get; private set; } = new IgnoredExceptionSet();

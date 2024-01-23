@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Pack": {
+      "commandName": "Project",
+      "commandLineArgs": "pack"
+    },
+    "Publish": {
+      "commandName": "Project",
+      "commandLineArgs": "publish --Release"
+    }
+  }
+}
