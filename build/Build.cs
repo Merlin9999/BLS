@@ -23,6 +23,10 @@ using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
+using System.Globalization;
+using System.Security.Policy;
+using System.Text.Encodings.Web;
+using System.Web;
 
 
 [GitHubActions(
@@ -144,10 +148,13 @@ class Build : NukeBuild
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
                 .EnableNoRestore()
+                .SetCopyright(BuildCopyright())
                 .SetVersion(GitVersion.NuGetVersion)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
+                .SetVersionPrefix(GitVersion.MajorMinorPatch)
+                .SetVersionSuffix(GitVersion.PreReleaseTag)
+                .AddProperty("IncludeSourceRevisionInInformationalVersion", Configuration != Configuration.Release)
             );
         });
 
@@ -174,10 +181,13 @@ class Build : NukeBuild
                 .SetConfiguration(Configuration)
                 .EnableNoRestore()
                 .EnableNoBuild()
+                .SetCopyright(BuildCopyright())
                 .SetVersion(GitVersion.NuGetVersionV2)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
                 .SetFileVersion(GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
+                .SetVersionPrefix(GitVersion.MajorMinorPatch)
+                .SetVersionSuffix(GitVersion.PreReleaseTag)
+                .AddProperty("IncludeSourceRevisionInInformationalVersion", Configuration != Configuration.Release)
                 .SetOutputDirectory(OutputDirectory)
             );
         });
@@ -250,7 +260,16 @@ class Build : NukeBuild
             "Unable to determine configuration by branch or local override parameter!");
     }
 
-    private Configuration GetConfigurationOverrideParameters()
+    string BuildCopyright()
+    {
+        CultureInfo enUS = new CultureInfo("en-US");
+        DateTime date = DateTime.ParseExact(GitVersion.CommitDate, "yyyy-MM-dd", enUS, DateTimeStyles.None);
+        string copyright =  $"Copyright (c) {date.Year} Marc Behnke, All Rights Reserved"
+            .Replace(",", HttpUtility.UrlEncode(","));
+        return copyright;
+    }
+
+    Configuration GetConfigurationOverrideParameters()
     {
         // If this is NOT a local build (e.g. CI Server), command line overrides are not allowed.
         if (IsLocalBuild)

@@ -1,12 +1,8 @@
 ﻿namespace BLS.GlobWriters;
 
-public class GlobAndCopyFilesWriter : AbstractGlobToFileWriter<CopyFilesArgs>
+public class GlobAndCopyFilesWriter(CopyFilesArgs args, TextWriter outputWriter)
+    : AbstractGlobToFileWriter<CopyFilesArgs>(args, outputWriter)
 {
-    public GlobAndCopyFilesWriter(CopyFilesArgs args, TextWriter outputWriter) 
-        : base(args, outputWriter)
-    {
-    }
-
     protected override async Task WriteFilesAsync(IEnumerable<string> files, StringComparer comparer)
     {
         foreach (string file in files)

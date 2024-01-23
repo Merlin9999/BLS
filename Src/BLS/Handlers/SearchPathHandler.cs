@@ -4,19 +4,12 @@ using Serilog;
 
 namespace BLS.Handlers;
 
-public class SearchPathHandler : AbstractGlobberHandler, IRequestHandler<SearchPathArgs, EExitCode>
+public class SearchPathHandler(ILogger logger) : AbstractGlobberHandler, IRequestHandler<SearchPathArgs, EExitCode>
 {
-    private readonly ILogger _logger;
-
-    public SearchPathHandler(ILogger logger)
-    {
-        this._logger = logger;
-    }
-
     public async Task<EExitCode> Handle(SearchPathArgs request, CancellationToken cancellationToken)
     {
         InitBasePathsFromPathEnvironmentVar(request);
-        LogArgs(request, this._logger);
+        LogArgs(request, logger);
 
         GlobFilesToTextWriter globFilesToTextWriter = new GlobFilesToTextWriter(request, Console.Out);
         await globFilesToTextWriter.ExecuteAsync();

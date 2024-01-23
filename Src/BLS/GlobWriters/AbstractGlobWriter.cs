@@ -1,14 +1,9 @@
 ﻿namespace BLS.GlobWriters;
 
-public abstract class AbstractGlobWriter
+public abstract class AbstractGlobWriter(TextWriter outputWriter)
 {
     protected static readonly string[] ParentFolderAsArray = [".."];
-    protected TextWriter OutputWriter { get; }
-
-    protected AbstractGlobWriter(TextWriter outputWriter)
-    {
-        this.OutputWriter = outputWriter;
-    }
+    protected TextWriter OutputWriter { get; } = outputWriter;
 
     public abstract Task ExecuteAsync();
 
