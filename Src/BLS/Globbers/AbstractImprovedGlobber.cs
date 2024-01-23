@@ -95,7 +95,7 @@ public abstract partial class AbstractImprovedGlobber<TFileSysInfo> : AbstractGl
     public void ValidateGlobPath(string path, bool isIncludePath)
     {
         if (Path.IsPathRooted(path))
-            throw new ArgumentException($"Glob path cannot be rooted! Path: \"{path}\"");
+            throw new ArgumentException("A single rooted glob path is supported if no base paths are supplied!");
 
         string[] segments = SplitPathIntoSegments(path).Where(s => s != ".").ToArray();
 
