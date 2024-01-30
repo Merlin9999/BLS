@@ -10,7 +10,7 @@ public class ListFilesHandler(ILogger logger) : AbstractGlobberHandler, IRequest
     {
         LogArgs(request, logger);
 
-        var globFilesToTextWriter = new GlobFilesToTextWriter(request, Console.Out);
+        var globFilesToTextWriter = new GlobFileListToTextWriter(request, Console.Out);
         await globFilesToTextWriter.ExecuteAsync();
 
         return EExitCode.Success;

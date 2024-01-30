@@ -2,7 +2,7 @@
 
 namespace BLS.GlobWriters;
 
-public class GlobFoldersToTextWriter(IGlobberArgs args, TextWriter outputWriter) : AbstractGlobWriter(outputWriter)
+public class GlobFolderListToTextWriter(IGlobberArgs args, TextWriter outputWriter) : AbstractGlobWriter(outputWriter)
 {
     public override async Task ExecuteAsync()
     {

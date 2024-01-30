@@ -11,7 +11,7 @@ public class SearchPathHandler(ILogger logger) : AbstractGlobberHandler, IReques
         InitBasePathsFromPathEnvironmentVar(request);
         LogArgs(request, logger);
 
-        GlobFilesToTextWriter globFilesToTextWriter = new GlobFilesToTextWriter(request, Console.Out);
+        GlobFileListToTextWriter globFilesToTextWriter = new GlobFileListToTextWriter(request, Console.Out);
         await globFilesToTextWriter.ExecuteAsync();
 
         return EExitCode.Success;
