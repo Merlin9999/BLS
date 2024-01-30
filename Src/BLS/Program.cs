@@ -111,6 +111,18 @@ public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryAr
 
     [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
     public bool UseFrameworkGlobber { get; set; }
+
+
+
+
+}
+
+public enum EFileColumns
+{
+    Attributes,
+    LastWriteTime,
+    Size,
+    Owner,
 }
 
 [Verb("list-folders", isDefault: false, ["folders"], HelpText = "List Folders")]
