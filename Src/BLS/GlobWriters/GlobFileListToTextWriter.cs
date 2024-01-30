@@ -5,7 +5,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace BLS.GlobWriters;
 
-public class GlobFileListToTextWriter(IGlobberAndFactoryArgs args, TextWriter outputWriter)
+public class GlobFileListToTextWriter(IGlobberDisplayFileArgs args, TextWriter outputWriter)
     : AbstractGlobToTextWriter(outputWriter)
 {
     public override async Task ExecuteAsync()
@@ -21,13 +21,22 @@ public class GlobFileListToTextWriter(IGlobberAndFactoryArgs args, TextWriter ou
 
     private string FormatFileLine(string file)
     {
-        var fileInfo = args.BasePaths.Count() == 1
+        if (!args.DisplayDetails && !args.DisplayOwner)
+            return file;
+
+        FileInfo fileInfo = args.BasePaths.Count() == 1
             ? new FileInfo(Path.Combine(args.BasePaths.First(), file))
             : new FileInfo(file);
-        return $"{GetAttribs(fileInfo.Attributes)}  {FormatDateTime(fileInfo.LastWriteTime)}  {GetFileSize(fileInfo)}  {this.GetOwner(fileInfo)}  {file}";
+        if (args.DisplayDetails && args.DisplayOwner)
+            return $"{GetAttribs(fileInfo.Attributes)}  {FormatDateTime(fileInfo.LastWriteTime)}  {GetFileSize(fileInfo)}  {GetOwner(fileInfo)}  {file}";
+
+        if (args.DisplayDetails)
+            return $"{GetAttribs(fileInfo.Attributes)}  {FormatDateTime(fileInfo.LastWriteTime)}  {GetFileSize(fileInfo)}  {file}";
+
+        return $"{GetOwner(fileInfo)}  {file}";
     }
 
-    protected override string GetOwner(FileInfo fileInfo, int maxLength = 20)
+    private static string GetOwner(FileInfo fileInfo, int maxLength = 20)
     {
         if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
         {

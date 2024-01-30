@@ -25,8 +25,6 @@ public abstract class AbstractGlobToTextWriter(TextWriter outputWriter) : Abstra
         return $"{date} {time}";
     }
 
-    protected abstract string GetOwner(FileInfo fileInfo, int maxLength = 20);
-
     protected static string PadLeft(string value, int maxLength)
     {
         if (value.Length + 1 <= maxLength)

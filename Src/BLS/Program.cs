@@ -104,7 +104,7 @@ public class GlobHelpArgs : IRequest<EExitCode>
 }
 
 [Verb("list-files", isDefault: true, ["files"], HelpText = "List Files")]
-public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
+public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberDisplayFileArgs
 {
     [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
@@ -112,33 +112,39 @@ public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryAr
     [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
     public bool UseFrameworkGlobber { get; set; }
 
+    [Option('t', "details", Default = false, HelpText = "Display Attributes, Last Write Time, and File Size")]
+    public bool DisplayDetails { get; set; }
 
-
-
-}
-
-public enum EFileColumns
-{
-    Attributes,
-    LastWriteTime,
-    Size,
-    Owner,
+    [Option('o', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
+    public bool DisplayOwner { get; set; }
 }
 
 [Verb("list-folders", isDefault: false, ["folders"], HelpText = "List Folders")]
-public class ListFoldersArgs : BaseArgs, IRequest<EExitCode>, IGlobberArgs
+public class ListFoldersArgs : BaseArgs, IRequest<EExitCode>, IGlobberDisplayFolderArgs
 {
     [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
+
+    [Option('t', "details", Default = false, HelpText = "Display Attributes and Last Write Time")]
+    public bool DisplayDetails { get; set; }
+
+    [Option('o', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
+    public bool DisplayOwner { get; set; }
 }
 
 [Verb("search-path", isDefault: false, ["path"], HelpText = "Search Path")]
-public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberAndFactoryArgs
+public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberDisplayFileArgs
 {
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
     [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
     public bool UseFrameworkGlobber { get; set; }
+
+    [Option('t', "details", Default = false, HelpText = "Display Attributes, Last Write Time, and File Size")]
+    public bool DisplayDetails { get; set; }
+
+    [Option('o', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
+    public bool DisplayOwner { get; set; }
 }
 
 [Verb("zip-files", isDefault: false, ["zip"], HelpText = "Copy Files to a Zip Archive")]
