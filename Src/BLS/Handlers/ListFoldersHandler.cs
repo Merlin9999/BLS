@@ -10,7 +10,7 @@ public class ListFoldersHandler(ILogger logger) : AbstractGlobberHandler, IReque
     {
         LogArgs(request, logger);
 
-        var globFilesToTextWriter = new GlobFoldersToTextWriter(request, Console.Out);
+        var globFilesToTextWriter = new GlobFolderListToTextWriter(request, Console.Out);
         await globFilesToTextWriter.ExecuteAsync();
 
         return EExitCode.Success;

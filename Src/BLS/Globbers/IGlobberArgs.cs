@@ -11,6 +11,14 @@ public interface IGlobToWriteFile : IGlobberArgs
     bool ErrorOnDuplicate { get; set; }
 }
 
+public interface IGlobberDisplayFileArgs : IGlobberAndFactoryArgs, IGlobberDisplayArgs
+{
+}
+
+public interface IGlobberDisplayFolderArgs : IGlobberArgs, IGlobberDisplayArgs
+{
+}
+
 public interface IGlobberAndFactoryArgs : IGlobberArgs, IGlobberFactoryArgs
 {
 }
@@ -30,4 +38,10 @@ public interface IGlobberArgs
 public interface IGlobberFactoryArgs
 {
     bool UseFrameworkGlobber { get; set; }
+}
+
+public interface IGlobberDisplayArgs : IGlobberArgs
+{
+    public bool DisplayDetails { get; set; }
+    public bool DisplayOwner { get; set; }
 }
