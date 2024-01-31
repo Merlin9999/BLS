@@ -4,6 +4,7 @@ using CommandLine;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Nito.AsyncEx;
+using Nito.Disposables;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -33,7 +34,13 @@ internal abstract class Program
 
             IMediator mediator = InitializeDI();
 
-            ParserResult<object> parserResult = Parser.Default.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs, GlobHelpArgs>(args);
+            var argsParser = new Parser(cfg =>
+            {
+                cfg.HelpWriter = Console.Error;
+                cfg.CaseInsensitiveEnumValues = true;
+            });
+
+            ParserResult<object> parserResult = argsParser.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs, GlobHelpArgs>(args);
 
             retValue = parserResult.MapResult(
                 (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
@@ -106,7 +113,7 @@ public class GlobHelpArgs : IRequest<EExitCode>
 [Verb("list-files", isDefault: true, ["files"], HelpText = "List Files")]
 public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberDisplayFileArgs
 {
-    [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
+    [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory.")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
     [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
@@ -115,20 +122,20 @@ public class ListFilesArgs : BaseArgs, IRequest<EExitCode>, IGlobberDisplayFileA
     [Option('t', "details", Default = false, HelpText = "Display Attributes, Last Write Time, and File Size")]
     public bool DisplayDetails { get; set; }
 
-    [Option('o', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
+    [Option('w', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
     public bool DisplayOwner { get; set; }
 }
 
 [Verb("list-folders", isDefault: false, ["folders"], HelpText = "List Folders")]
 public class ListFoldersArgs : BaseArgs, IRequest<EExitCode>, IGlobberDisplayFolderArgs
 {
-    [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory")]
+    [Option('b', "base-paths", HelpText = "One or more base paths for globbing. Default is the working directory.")]
     public IEnumerable<string> BasePaths { get; set; } = new List<string>();
 
     [Option('t', "details", Default = false, HelpText = "Display Attributes and Last Write Time")]
     public bool DisplayDetails { get; set; }
 
-    [Option('o', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
+    [Option('w', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
     public bool DisplayOwner { get; set; }
 }
 
@@ -143,7 +150,7 @@ public class SearchPathArgs : BaseArgs, IRequest<EExitCode>, IGlobberDisplayFile
     [Option('t', "details", Default = false, HelpText = "Display Attributes, Last Write Time, and File Size")]
     public bool DisplayDetails { get; set; }
 
-    [Option('o', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
+    [Option('w', "owner", Default = false, HelpText = "Display Owner (Windows Only)")]
     public bool DisplayOwner { get; set; }
 }
 
@@ -184,7 +191,7 @@ public class CopyFilesArgs : GlobToWriteFileBaseArgs, IGlobToWriteFileAndFactory
 
 public class GlobToWriteFileBaseArgs : BaseArgs
 {
-    [Option('b', "base-path", HelpText = "One or more base paths for globbing. Default is the working directory")]
+    [Option('b', "base-path", HelpText = "One or more base paths for globbing. Default is the working directory.")]
     public required string BasePath
     {
         get => this.BasePaths.FirstOrDefault() ?? string.Empty;
@@ -195,10 +202,10 @@ public class GlobToWriteFileBaseArgs : BaseArgs
 
 public abstract class BaseArgs
 {
-    [Value(0, Required = true, MetaName = "Include Globs", HelpText = "Included Paths. At least 1 is required")]
+    [Value(0, Required = true, MetaName = "Include Glob List", HelpText = "First args are unnamed glob paths. At least 1 is required.")]
     public IEnumerable<string> IncludeGlobPaths { get; set; } = new List<string>();
 
-    [Option('x', "exclude", HelpText = "Excluded Paths (optional)")]
+    [Option('x', "exclude", HelpText = "Exclude Glob List (optional)")]
     public IEnumerable<string> ExcludeGlobPaths { get; set; } = new List<string>();
 
     [Option('q', "fully-qualified-paths", HelpText = "Output fully qualified paths")]
@@ -207,7 +214,7 @@ public abstract class BaseArgs
     [Option('c', "case-sensitive", Default = false, HelpText = "Toggle to add case sensitive path matching")]
     public bool CaseSensitive { get; set; }
 
-    [Option('s', "sort", Default = false, HelpText = "Toggle to sort")]
+    [Option('s', "sort", Default = false, HelpText = "Toggle to sort by name")]
     public bool Sort { get; set; }
 
     [Option('d', "allow-duplicates", Default = false, HelpText = "Toggle allowing duplicates if multiple base paths for faster output")]
