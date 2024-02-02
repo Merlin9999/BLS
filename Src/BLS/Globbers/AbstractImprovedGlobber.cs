@@ -37,7 +37,7 @@ public abstract partial class AbstractImprovedGlobber<TFileSysInfo> : AbstractGl
         foreach (string globPath in this.Args.ExcludeGlobPaths)
             this.ValidateGlobPath(globPath, false);
 
-        string normalizedBasePath = ToBackSlashPathSeparators(basePath);
+        string normalizedBasePath = NormalizePathSeparators(basePath);
 
         DirectoryInfo baseDir = new(normalizedBasePath);
         DirectoryInfo commonRootDir = this.DetermineCommonRootPathFromBasePathAndIncludes(baseDir, stringComparer);
