@@ -231,7 +231,12 @@ public abstract class AbstractGlobber<TFolderEntryPathInfo, TFileSysInfo>(IGlobb
             int CompareFunc(TFolderEntryPathInfo x, TFolderEntryPathInfo y)
             {
                 if (x is FilePathInfo xAsFile && y is FilePathInfo yAsFile)
-                    return xAsFile.EntryInfo.Length.CompareTo(yAsFile.EntryInfo.Length);
+                {
+                    int cmp = xAsFile.EntryInfo.Length.CompareTo(yAsFile.EntryInfo.Length);
+                    if (cmp != 0)
+                        return cmp;
+                    return EntryNameCompareFunc()(x, y);
+                }
 
                 throw new NotSupportedException($"Sort type of {nameof(ESortType)}.{sortType} is not supported for {typeof(TFolderEntryPathInfo).Name} entries!");
             }

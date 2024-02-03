@@ -44,7 +44,7 @@ public class SystemFileGlobber : AbstractGlobber<FilePathInfo, FileInfo>
         }
 
         foreach (FilePatternMatch file in files.Files)
-            yield return this.CreateOutputEntry(basePath, file.Path, null);
+            yield return this.CreateOutputEntry(basePath, NormalizePathSegmentSeparators(file.Path), null);
     }
 
     protected override FilePathInfo CreateOutputEntry(string basePath, string entryPath, FileInfo? fileSysInfo)
