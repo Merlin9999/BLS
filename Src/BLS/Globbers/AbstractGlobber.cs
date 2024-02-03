@@ -154,7 +154,7 @@ public abstract class AbstractGlobber<TFolderEntryPathInfo, TFileSysInfo>(IGlobb
     private List<TFolderEntryPathInfo> GetCachedEntries(List<string> basePaths)
     {
         var folderEntryCompareFunc = this.BuildFolderEntryCompareFunc();
-        if (args.SortDescending)
+        if (this.Args.SortDescending)
             folderEntryCompareFunc = DescendingCompareFunc(folderEntryCompareFunc);
 
         var entryComparer = folderEntryCompareFunc.AsComparer();
