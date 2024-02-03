@@ -11,7 +11,8 @@ public class GlobberTestArgs : IGlobberArgs
 
     public bool UseFullyQualifiedPaths { get; set; }
     public bool CaseSensitive { get; set; }
-    public bool Sort { get; set; }
+    public ESortType? Sort { get; set; }
+    public bool SortDescending { get; set; }
     public bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
     public bool AbortOnFileSystemAccessExceptions { get; set; }
 }

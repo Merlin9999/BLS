@@ -10,6 +10,9 @@ public class ListFoldersHandler(ILogger logger) : AbstractGlobberHandler, IReque
     {
         LogArgs(request, logger);
 
+        if (request.Sort == ESortType.Size)
+            throw new ArgumentException("Sort by size is not supported for folders.");
+
         var globFilesToTextWriter = new GlobFolderListToTextWriter(request, Console.Out);
         await globFilesToTextWriter.ExecuteAsync();
 

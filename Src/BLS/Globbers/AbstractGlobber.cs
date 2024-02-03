@@ -69,7 +69,7 @@ public abstract class AbstractGlobber<TFolderEntryPathInfo, TFileSysInfo>(IGlobb
 
     protected string CurrentWorkingDirectory => this._currentDirectory ??= Directory.GetCurrentDirectory();
     protected bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this.Args.UseFullyQualifiedPaths || this.Args.BasePaths.Count() > 1;
-    private bool CanOutputImmediately => this._canOutputImmediately ??= !this.Args.Sort && (this.Args.AllowDuplicatesWhenMultipleBasePaths || this.Args.BasePaths.Count() <= 1);
+    private bool CanOutputImmediately => this._canOutputImmediately ??= this.Args.Sort == null && (this.Args.AllowDuplicatesWhenMultipleBasePaths || this.Args.BasePaths.Count() <= 1);
 
     public IEnumerable<Exception> IgnoredAccessExceptions => this.IgnoredExceptions.Exceptions;
     protected IgnoredExceptionSet IgnoredExceptions { get; private set; } = new IgnoredExceptionSet();
@@ -153,8 +153,10 @@ public abstract class AbstractGlobber<TFolderEntryPathInfo, TFileSysInfo>(IGlobb
 
     private List<TFolderEntryPathInfo> GetCachedEntries(List<string> basePaths)
     {
-        StringComparer stringComparer = this.Args.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
-        Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> folderEntryCompareFunc = (x, y) => stringComparer.Compare(x.EntryPath, y.EntryPath);
+        var folderEntryCompareFunc = this.BuildFolderEntryCompareFunc();
+        if (args.SortDescending)
+            folderEntryCompareFunc = DescendingCompareFunc(folderEntryCompareFunc);
+
         var entryComparer = folderEntryCompareFunc.AsComparer();
         var entryEqualityComparer = folderEntryCompareFunc.AsEqualityComparer();
 
@@ -168,6 +170,72 @@ public abstract class AbstractGlobber<TFolderEntryPathInfo, TFileSysInfo>(IGlobb
         entryPaths.Sort(entryComparer);
 
         return entryPaths;
+
+        Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> DescendingCompareFunc(Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> ascendingFunc)
+        {
+            return (x, y) => -ascendingFunc(x, y);
+        }
+    }
+
+    private Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> BuildFolderEntryCompareFunc()
+    {
+        ESortType sortType = this.Args.Sort ?? ESortType.Name;
+
+        switch (sortType)
+        {
+            case ESortType.Name:
+                return EntryNameCompareFunc();
+
+            case ESortType.Extension:
+                return EntryExtCompareFunc();
+
+            case ESortType.Date:
+                return EntryDateCompareFunc();
+
+            case ESortType.Size:
+                return FileSizeCompareFunc();
+        }
+
+        throw new NotSupportedException($"Sort type of {nameof(ESortType)}.{sortType} is not supported!");
+
+        Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> EntryNameCompareFunc()
+        {
+            StringComparer stringComparer = this.Args.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+            Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> folderEntryCompareFunc = (x, y) => stringComparer.Compare(x.EntryPath, y.EntryPath);
+            return folderEntryCompareFunc;
+        }
+
+        Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> EntryExtCompareFunc()
+        {
+            StringComparer stringComparer = this.Args.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+            return CompareFunc;
+
+            int CompareFunc(TFolderEntryPathInfo x, TFolderEntryPathInfo y)
+            {
+                int extCompare = stringComparer.Compare(Path.GetExtension(x.EntryPath), Path.GetExtension(y.EntryPath));
+                return extCompare != 0 ? extCompare : stringComparer.Compare(x.EntryPath, y.EntryPath);
+            }
+        }
+
+        Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> EntryDateCompareFunc()
+        {
+            return CompareFunc;
+
+            int CompareFunc(TFolderEntryPathInfo x, TFolderEntryPathInfo y) => x.EntryInfo.LastWriteTime.CompareTo(y.EntryInfo.LastWriteTime);
+        }
+
+        Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> FileSizeCompareFunc()
+        {
+            return CompareFunc;
+
+            int CompareFunc(TFolderEntryPathInfo x, TFolderEntryPathInfo y)
+            {
+                if (x is FilePathInfo xAsFile && y is FilePathInfo yAsFile)
+                    return xAsFile.EntryInfo.Length.CompareTo(yAsFile.EntryInfo.Length);
+
+                throw new NotSupportedException($"Sort type of {nameof(ESortType)}.{sortType} is not supported for {typeof(TFolderEntryPathInfo).Name} entries!");
+            }
+        }
     }
 
     protected class IgnoredExceptionSet

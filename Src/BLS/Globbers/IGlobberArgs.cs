@@ -30,7 +30,8 @@ public interface IGlobberArgs
     IEnumerable<string> BasePaths { get; set; }
     bool UseFullyQualifiedPaths { get; set; }
     bool CaseSensitive { get; set; }
-    bool Sort { get; set; }
+    ESortType? Sort { get; set; }
+    bool SortDescending { get; set; }
     bool AllowDuplicatesWhenMultipleBasePaths { get; set; }
     bool AbortOnFileSystemAccessExceptions { get; set; }
 }

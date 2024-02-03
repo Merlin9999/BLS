@@ -11,21 +11,41 @@
       "commandName": "Project",
       "commandLineArgs": "..\\..\\..\\**\\*"
     },
-    "BLS - ProjectFiles - Exclude bin & obj": {
-      "commandName": "Project",
-      "commandLineArgs": "**\\* -b ..\\..\\.. -x bin\\**\\* obj\\**\\*"
-    },
     "BLS - ProjectFiles & Parent .vs": {
       "commandName": "Project",
       "commandLineArgs": "**\\* -b ..\\..\\.. ..\\..\\..\\.. -x bin\\**\\* obj\\**\\* LS\\**"
     },
-    "BLS - ProjectFiles & Parent & Sorted": {
+    "BLS - ProjectFiles - Exclude bin & obj": {
       "commandName": "Project",
-      "commandLineArgs": "**\\* -b ..\\..\\.. ..\\..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -s"
+      "commandLineArgs": "**\\* -b ..\\..\\.. -x bin\\**\\* obj\\**\\*"
     },
-    "BLS - Path Executables": {
+    "BLS - ProjectFiles - Sorted by None (Name)": {
       "commandName": "Project",
-      "commandLineArgs": "path *.exe *.com *.bat *.con *.cmd"
+      "commandLineArgs": "**\\* -b ..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -s"
+    },
+    "BLS - ProjectFiles - Sorted by Name": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\* -b ..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -sn"
+    },
+    "BLS - ProjectFiles - Sorted by Extension": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\* -b ..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -se"
+    },
+    "BLS - ProjectFiles - Sorted by Date": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\* -b ..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -t -sd"
+    },
+    "BLS - ProjectFiles - Sorted by Size": {
+      "commandName": "Project",
+      "commandLineArgs": "**\\* -b ..\\..\\.. -x **\\bin\\**\\* **\\obj\\**\\* -t -ss"
+    },
+    "BLS - C:\\ Rooted Glob": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\marcb\\.dotnet\\tools\\**\\bls.dll"
+    },
+    "BLS - \\ Rooted Glob": {
+      "commandName": "Project",
+      "commandLineArgs": "\\Users\\marcb\\.dotnet\\tools\\**\\bls.dll"
     },
     "BLS - Users - Exceptions": {
       "commandName": "Project",
@@ -34,6 +54,10 @@
     "BLS - C:\\": {
       "commandName": "Project",
       "commandLineArgs": "* -b c:\\"
+    },
+    "BLS - Path Executables": {
+      "commandName": "Project",
+      "commandLineArgs": "path *.exe *.com *.bat *.con *.cmd"
     },
     "BLS - Zip - Replace Dups": {
       "commandName": "Project",
@@ -70,14 +94,6 @@
     "BLS - Glob Help": {
       "commandName": "Project",
       "commandLineArgs": "glob"
-    },
-    "BLS - C:\\ Rooted Glob": {
-      "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\marcb\\.dotnet\\tools\\**\\bls.dll"
-    },
-    "BLS - \\ Rooted Glob": {
-      "commandName": "Project",
-      "commandLineArgs": "\\Users\\marcb\\.dotnet\\tools\\**\\bls.dll"
     }
   }
 }
