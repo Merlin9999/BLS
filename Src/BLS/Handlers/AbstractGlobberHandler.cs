@@ -32,9 +32,9 @@ public abstract class AbstractGlobberHandler
             logger.Debug($"   {index:D2} - \"{globPath}\"");
         }
 
-        logger.Debug($"AbortOnFileSystemAccessExceptions: {args.AbortOnFileSystemAccessExceptions}");
-        logger.Debug($"                             Sort: {args.Sort}");
-        logger.Debug($"                    CaseSensitive: {args.CaseSensitive}");
-        logger.Debug($"                  AllowDuplicatesWhenMultipleBasePaths: {args.AllowDuplicatesWhenMultipleBasePaths}");
+        logger.Debug($"   AbortOnFileSystemAccessExceptions: {args.AbortOnFileSystemAccessExceptions}");
+        logger.Debug($"                                Sort: {args.Sort}");
+        logger.Debug($"                       CaseSensitive: {args.CaseSensitive}");
+        logger.Debug($"AllowDuplicatesWhenMultipleBasePaths: {args.AllowDuplicatesWhenMultipleBasePaths}");
     }
 }

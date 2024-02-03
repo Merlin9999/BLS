@@ -1,9 +1,10 @@
 ﻿using System.Collections.Immutable;
+using System.IO;
 using DotNet.Globbing;
 
 namespace BLS.Globbers;
 
-public class FileGlobber(IGlobberArgs args) : AbstractImprovedGlobber<FileInfo>(args)
+public class FileGlobber(IGlobberArgs args) : AbstractImprovedGlobber<FilePathInfo, FileInfo>(args)
 {
     protected override IEnumerable<FileInfo> EnumerateAllEntries(DirectoryInfo dirInfo, ImmutableList<IncludeGlobber> includeInfos, 
         ImmutableList<Glob> excludeGlobs, DirectoryInfo commonRootDir, DirectoryInfo baseDir, IgnoredExceptionSet ignoredExceptions)
@@ -46,5 +47,20 @@ public class FileGlobber(IGlobberArgs args) : AbstractImprovedGlobber<FileInfo>(
                     yield return fileInfo;
             }
         }
+    }
+
+    protected override FilePathInfo CreateOutputEntry(string basePath, string entryPath, FileInfo? fileSysInfo)
+    {
+        if (fileSysInfo is null)
+            throw new ArgumentNullException(nameof(fileSysInfo));
+
+        return new FilePathInfo()
+        {
+            BasePath = basePath,
+            EntryPath = this.UseFullyQualifiedOutputPaths
+                ? Path.GetFullPath(Path.Combine(this.CurrentWorkingDirectory, basePath, entryPath))
+                : entryPath,
+            EntryInfo = fileSysInfo,
+        };
     }
 }
