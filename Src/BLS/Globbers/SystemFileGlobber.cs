@@ -4,7 +4,7 @@ using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 
 namespace BLS.Globbers;
 
-public class SystemFileGlobber : AbstractGlobber
+public class SystemFileGlobber : AbstractGlobber<FilePathInfo, FileInfo>
 {
     private readonly Matcher _matcher;
 
@@ -14,7 +14,7 @@ public class SystemFileGlobber : AbstractGlobber
         this._matcher = CreateMatcher(this.Args);
     }
 
-    protected override IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions)
+    protected override IEnumerable<FilePathInfo> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions)
     {
         PatternMatchingResult files;
 
@@ -44,7 +44,18 @@ public class SystemFileGlobber : AbstractGlobber
         }
 
         foreach (FilePatternMatch file in files.Files)
-            yield return file.Path;
+            yield return this.CreateOutputEntry(basePath, file.Path, null);
+    }
+
+    protected override FilePathInfo CreateOutputEntry(string basePath, string entryPath, FileInfo? fileSysInfo)
+    {
+        return new FilePathInfo()
+        {
+            BasePath = basePath,
+            EntryPath = this.UseFullyQualifiedOutputPaths
+                ? Path.GetFullPath(Path.Combine(this.CurrentWorkingDirectory, basePath, entryPath))
+                : entryPath,
+        };
     }
 
     private static Matcher CreateMatcher(IGlobberArgs args)

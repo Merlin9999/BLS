@@ -1,30 +1,82 @@
 ﻿using System.Collections.Immutable;
+using System.Linq;
+using BLS.Extensions;
 
 namespace BLS.Globbers;
 
-public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
+public abstract class AbstractGlobber
+{
+    private static bool? _areBackSlashPathSegmentSeparatorsStandard;
+    private static bool? _areForwardSlashPathSegmentSeparatorsStandard;
+
+    protected static bool AreBackSlashPathSegmentSeparatorsStandard => _areBackSlashPathSegmentSeparatorsStandard ??= Path.DirectorySeparatorChar == '\\' && Path.AltDirectorySeparatorChar == '/';
+    protected static bool AreForwardSlashPathSegmentSeparatorsStandard => _areForwardSlashPathSegmentSeparatorsStandard ??= Path.DirectorySeparatorChar == '/' && Path.AltDirectorySeparatorChar == '\\';
+    
+    public static string ToStandardPathSegmentSeparators(string path) => path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+    public static string ToAlternatePathSegmentSeparators(string path) => path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    public static string NormalizePathSegmentSeparators(string path) => ToStandardPathSegmentSeparators(path);
+    public static string ToForwardSlashPathSegmentSeparators(string path) => AreForwardSlashPathSegmentSeparatorsStandard
+        ? ToStandardPathSegmentSeparators(path)
+        : AreBackSlashPathSegmentSeparatorsStandard
+            ? ToAlternatePathSegmentSeparators(path)
+            : path;
+
+    public static string BuildRelativeName(string fullEntryNamePath, DirectoryInfo commonRootDir, DirectoryInfo baseDir)
+    {
+        string relativeEntryName = Path.GetRelativePath(commonRootDir.FullName, fullEntryNamePath);
+        string prefix = Path.GetRelativePath(baseDir.FullName, commonRootDir.FullName);
+        if (prefix != ".")
+            relativeEntryName = Path.Combine(prefix, relativeEntryName);
+        return relativeEntryName;
+    }
+
+    public static ImmutableList<string> SplitPathIntoSegments(string path)
+    {
+        return path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            .ToImmutableList();
+    }
+
+    public static ImmutableList<string> SplitPathAndNormalizeRelativeSegments(string path)
+    {
+        ImmutableList<string> pathSegments = SplitPathIntoSegments(path)
+            .Where(s => s != ".")
+            .ToImmutableList();
+        for (var index = pathSegments.Count - 1; index >= 1; index--)
+        {
+            string segment = pathSegments[index];
+            if (segment != "..")
+                continue;
+
+            string priorSegment = pathSegments[index - 1];
+            if (priorSegment != "..")
+                pathSegments = pathSegments.RemoveAt(--index).RemoveAt(index);
+        }
+
+        return pathSegments;
+    }
+}
+
+public abstract class AbstractGlobber<TFolderEntryPathInfo, TFileSysInfo>(IGlobberArgs args) : AbstractGlobber, IGlobber<TFolderEntryPathInfo, TFileSysInfo>
+    where TFileSysInfo : FileSystemInfo
+    where TFolderEntryPathInfo : IFolderEntryPathInfo<TFileSysInfo>
 {
     protected readonly IGlobberArgs Args = args;
-    private ImmutableList<string> _entryCache = [];
+    private ImmutableList<TFolderEntryPathInfo> _entryCache = [];
 
     private bool? _canOutputImmediately;
     private bool? _useFullyQualifiedOutputPaths;
     private string? _currentDirectory;
-    private static bool? _normalizeToBackSlashPathSeparators;
-    private static bool? _normalizeToForwardSlashPathSeparators;
 
-    private string CurrentWorkingDirectory => this._currentDirectory ??= Directory.GetCurrentDirectory();
-    private bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this.Args.UseFullyQualifiedPaths || this.Args.BasePaths.Count() > 1;
+    protected string CurrentWorkingDirectory => this._currentDirectory ??= Directory.GetCurrentDirectory();
+    protected bool UseFullyQualifiedOutputPaths => this._useFullyQualifiedOutputPaths ??= this.Args.UseFullyQualifiedPaths || this.Args.BasePaths.Count() > 1;
     private bool CanOutputImmediately => this._canOutputImmediately ??= !this.Args.Sort && (this.Args.AllowDuplicatesWhenMultipleBasePaths || this.Args.BasePaths.Count() <= 1);
-    private static bool NormalizeToBackSlashPathSeparators => _normalizeToBackSlashPathSeparators ??= Path.DirectorySeparatorChar == '\\' && Path.AltDirectorySeparatorChar == '/';
-    private static bool NormalizeToForwardSlashPathSeparators => _normalizeToForwardSlashPathSeparators ??= Path.DirectorySeparatorChar == '/' && Path.AltDirectorySeparatorChar == '\\';
 
     public IEnumerable<Exception> IgnoredAccessExceptions => this.IgnoredExceptions.Exceptions;
     protected IgnoredExceptionSet IgnoredExceptions { get; private set; } = new IgnoredExceptionSet();
 
-    public IEnumerable<string> Execute()
+    public IEnumerable<TFolderEntryPathInfo> Execute()
     {
-        List<string> basePaths = this.Args.BasePaths.ToList();
+        List<string> basePaths = this.Args.BasePaths.Select(NormalizePathSegmentSeparators).ToList();
 
         this.IgnoredExceptions = new IgnoredExceptionSet();
 
@@ -32,20 +84,20 @@ public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
         {
             this.FixUpIncludesAndBasePathForSingleRootedIncludeGlob(ref basePaths);
 
-            string basePath = basePaths.Count < 1 ? "./" : basePaths[0];
-            IEnumerable<string> entries = this.FindMatches(basePath, this.IgnoredExceptions);
+            string basePath = basePaths.Count < 1 ? "." + Path.DirectorySeparatorChar : basePaths[0];
+            IEnumerable<TFolderEntryPathInfo> entries = this.FindMatches(basePath, this.IgnoredExceptions);
             entries = this.OutputOrCacheEntries(basePath, entries);
-            foreach (string entry in entries)
-                yield return NormalizePathSeparators(entry);
+            foreach (TFolderEntryPathInfo entry in entries)
+                yield return entry;
         }
         else
         {
             foreach (string basePath in basePaths)
             {
-                IEnumerable<string> entries = this.FindMatches(basePath, this.IgnoredExceptions);
+                IEnumerable<TFolderEntryPathInfo> entries = this.FindMatches(basePath, this.IgnoredExceptions);
                 entries =  this.OutputOrCacheEntries(basePath, entries);
-                foreach (string entry in entries)
-                    yield return NormalizePathSeparators(entry);
+                foreach (TFolderEntryPathInfo entry in entries)
+                    yield return entry;
             }
         }
 
@@ -53,11 +105,12 @@ public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
         // and need to be output now.
         if (!this.CanOutputImmediately)
         {
-            List<string> entries = this.GetCachedEntries(basePaths);
-            foreach (string entry in entries)
-                yield return NormalizePathSeparators(entry);
+            List<TFolderEntryPathInfo> entries = this.GetCachedEntries(basePaths);
+            foreach (TFolderEntryPathInfo entry in entries)
+                yield return entry;
         }
     }
+
 
     private void FixUpIncludesAndBasePathForSingleRootedIncludeGlob(ref List<string> basePaths)
     {
@@ -81,45 +134,40 @@ public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
         this.Args.UseFullyQualifiedPaths = true;
     }
 
-    protected abstract IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions);
+    protected abstract IEnumerable<TFolderEntryPathInfo> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions);
 
-    private IEnumerable<string> OutputOrCacheEntries(string basePath, IEnumerable<string> entryPaths)
+    protected abstract TFolderEntryPathInfo CreateOutputEntry(string basePath, string entryPath, TFileSysInfo? fileSysInfo);
+
+    private IEnumerable<TFolderEntryPathInfo> OutputOrCacheEntries(string basePath, IEnumerable<TFolderEntryPathInfo> entries)
     {
         if (this.CanOutputImmediately)
         {
-            foreach (string entryPath in entryPaths)
-                yield return this.GetOutputPath(basePath, entryPath);
+            foreach (TFolderEntryPathInfo entry in entries)
+                yield return entry;
         }
         else
         {
-            IEnumerable<string> allEntries = entryPaths
-                .Select(entryPath => this.GetOutputPath(basePath, entryPath));
-            this._entryCache = this._entryCache.AddRange(allEntries);
+            this._entryCache = this._entryCache.AddRange(entries);
         }
     }
 
-    private List<string> GetCachedEntries(List<string> basePaths)
+    private List<TFolderEntryPathInfo> GetCachedEntries(List<string> basePaths)
     {
         StringComparer stringComparer = this.Args.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+        Func<TFolderEntryPathInfo, TFolderEntryPathInfo, int> folderEntryCompareFunc = (x, y) => stringComparer.Compare(x.EntryPath, y.EntryPath);
+        var entryComparer = folderEntryCompareFunc.AsComparer();
+        var entryEqualityComparer = folderEntryCompareFunc.AsEqualityComparer();
 
         // If multiple base paths, we need to remove duplicates.
-        List<string> entryPaths = basePaths.Count > 1
+        List<TFolderEntryPathInfo> entryPaths = basePaths.Count > 1
             ? this._entryCache
-                .Distinct(stringComparer)
+                .Distinct(entryEqualityComparer)
                 .ToList()
             : this._entryCache.ToList();
 
-        entryPaths.Sort(stringComparer);
+        entryPaths.Sort(entryComparer);
 
         return entryPaths;
-    }
-
-    private string GetOutputPath(string basePath, string path)
-    {
-        if (!this.UseFullyQualifiedOutputPaths)
-            return path;
-
-        return Path.GetFullPath(Path.Combine(this.CurrentWorkingDirectory, basePath, path));
     }
 
     protected class IgnoredExceptionSet
@@ -135,47 +183,5 @@ public abstract class AbstractGlobber(IGlobberArgs args) : IGlobber
                 this.MessageSet = this.MessageSet.Add(ignoredException.Message);
             }
         }
-    }
-
-    public static string ToBackSlashPathSeparators(string path) => path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-    public static string ToForwardSlashPathSeparators(string path) => path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    public static string NormalizePathSeparators(string path) => NormalizeToBackSlashPathSeparators
-        ? ToBackSlashPathSeparators(path)
-        : NormalizeToForwardSlashPathSeparators
-            ? ToForwardSlashPathSeparators(path)
-            : path;
-
-    public static string BuildRelativeName(string fullEntryNamePath, DirectoryInfo commonRootDir, DirectoryInfo baseDir)
-    {
-        string relativeEntryName = Path.GetRelativePath(commonRootDir.FullName, fullEntryNamePath);
-        string prefix = Path.GetRelativePath(baseDir.FullName, commonRootDir.FullName);
-        if (prefix != ".")
-            relativeEntryName = Path.Combine(prefix, relativeEntryName);
-        return relativeEntryName;
-    }
-
-    public static ImmutableList<string> SplitPathIntoSegments(string path)
-    {
-        return path.Split('/', '\\')
-            .ToImmutableList();
-    }
-
-    public static ImmutableList<string> SplitPathAndNormalizeRelativeSegments(string path)
-    {
-        ImmutableList<string> pathSegments = SplitPathIntoSegments(path)
-            .Where(s => s != ".")
-            .ToImmutableList();
-        for (var index = pathSegments.Count - 1; index >= 1; index--)
-        {
-            string segment = pathSegments[index];
-            if (segment != "..")
-                continue;
-
-            string priorSegment = pathSegments[index - 1];
-            if (priorSegment != "..")
-                pathSegments = pathSegments.RemoveAt(--index).RemoveAt(index);
-        }
-
-        return pathSegments;
     }
 }
