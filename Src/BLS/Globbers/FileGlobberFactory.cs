@@ -2,12 +2,12 @@
 
 public static class FileGlobberFactory
 {
-    public static IGlobber Create(IGlobberAndFactoryArgs args) => Create(args, args);
+    public static IGlobber<FilePathInfo, FileInfo> Create(IGlobberAndFactoryArgs args) => Create(args, args);
 
-    public static IGlobber Create(IGlobberFactoryArgs factoryArgs, IGlobberArgs args)
+    public static IGlobber<FilePathInfo, FileInfo> Create(IGlobberFactoryArgs factoryArgs, IGlobberArgs args)
     {
         return factoryArgs.UseFrameworkGlobber
-            ? (IGlobber)new SystemFileGlobber(args)
-            : (IGlobber)new FileGlobber(args);
+            ? (IGlobber<FilePathInfo, FileInfo>)new SystemFileGlobber(args)
+            : (IGlobber<FilePathInfo, FileInfo>)new FileGlobber(args);
     }
 }

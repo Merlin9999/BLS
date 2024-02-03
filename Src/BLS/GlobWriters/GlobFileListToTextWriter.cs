@@ -10,30 +10,27 @@ public class GlobFileListToTextWriter(IGlobberDisplayFileArgs args, TextWriter o
 {
     public override async Task ExecuteAsync()
     {
-        IGlobber globber = FileGlobberFactory.Create(args);
+        IGlobber<FilePathInfo, FileInfo> globber = FileGlobberFactory.Create(args);
 
-        IEnumerable<string> files = globber.Execute();
-        foreach (string file in files)
+        IEnumerable<FilePathInfo> files = globber.Execute();
+        foreach (FilePathInfo file in files)
             await this.OutputWriter.WriteLineAsync(this.FormatFileLine(file));
 
         await this.OutputIgnoredExceptionsAsync(globber.IgnoredAccessExceptions.ToList());
     }
 
-    private string FormatFileLine(string file)
+    private string FormatFileLine(FilePathInfo fileInfo)
     {
         if (!args.DisplayDetails && !args.DisplayOwner)
-            return file;
+            return fileInfo.EntryPath;
 
-        FileInfo fileInfo = args.BasePaths.Count() == 1
-            ? new FileInfo(Path.Combine(args.BasePaths.First(), file))
-            : new FileInfo(file);
         if (args.DisplayDetails && args.DisplayOwner)
-            return $"{GetAttribs(fileInfo.Attributes)}  {FormatDateTime(fileInfo.LastWriteTime)}  {GetFileSize(fileInfo)}  {GetOwner(fileInfo)}  {file}";
+            return $"{GetAttribs(fileInfo.EntryInfo.Attributes)}  {FormatDateTime(fileInfo.EntryInfo.LastWriteTime)}  {GetFileSize(fileInfo.EntryInfo)}  {GetOwner(fileInfo.EntryInfo)}  {fileInfo.EntryPath}";
 
         if (args.DisplayDetails)
-            return $"{GetAttribs(fileInfo.Attributes)}  {FormatDateTime(fileInfo.LastWriteTime)}  {GetFileSize(fileInfo)}  {file}";
+            return $"{GetAttribs(fileInfo.EntryInfo.Attributes)}  {FormatDateTime(fileInfo.EntryInfo.LastWriteTime)}  {GetFileSize(fileInfo.EntryInfo)}  {fileInfo.EntryPath}";
 
-        return $"{GetOwner(fileInfo)}  {file}";
+        return $"{GetOwner(fileInfo.EntryInfo)}  {fileInfo.EntryPath}";
     }
 
     private static string GetOwner(FileInfo fileInfo, int maxLength = 20)

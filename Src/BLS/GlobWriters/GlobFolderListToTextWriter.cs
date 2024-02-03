@@ -8,30 +8,27 @@ public class GlobFolderListToTextWriter(IGlobberDisplayFolderArgs args, TextWrit
 {
     public override async Task ExecuteAsync()
     {
-        IGlobber globber = new FolderGlobber(args);
+        var globber = new FolderGlobber(args);
 
-        IEnumerable<string> folders = globber.Execute();
-        foreach (string folder in folders)
+        IEnumerable<FolderPathInfo> folders = globber.Execute();
+        foreach (FolderPathInfo folder in folders)
             await this.OutputWriter.WriteLineAsync(this.FormatFileLine(folder));
 
         await this.OutputIgnoredExceptionsAsync(globber.IgnoredAccessExceptions.ToList());
     }
 
-    private string? FormatFileLine(string folder)
+    private string? FormatFileLine(FolderPathInfo folderInfo)
     {
         if (!args.DisplayDetails && !args.DisplayOwner)
-            return folder;
+            return folderInfo.EntryPath;
 
-        DirectoryInfo folderInfo = args.BasePaths.Count() == 1
-            ? new DirectoryInfo(Path.Combine(args.BasePaths.First(), folder))
-            : new DirectoryInfo(folder);
         if (args.DisplayDetails && args.DisplayOwner)
-            return $"{GetAttribs(folderInfo.Attributes)}  {FormatDateTime(folderInfo.LastWriteTime)}  {GetOwner(folderInfo)}  {folder}";
+            return $"{GetAttribs(folderInfo.EntryInfo.Attributes)}  {FormatDateTime(folderInfo.EntryInfo.LastWriteTime)}  {GetOwner(folderInfo.EntryInfo)}  {folderInfo.EntryPath}";
 
         if (args.DisplayDetails)
-            return $"{GetAttribs(folderInfo.Attributes)}  {FormatDateTime(folderInfo.LastWriteTime)}  {folder}";
+            return $"{GetAttribs(folderInfo.EntryInfo.Attributes)}  {FormatDateTime(folderInfo.EntryInfo.LastWriteTime)}  {folderInfo.EntryPath}";
 
-        return $"{GetOwner(folderInfo)}  {folder}";
+        return $"{GetOwner(folderInfo.EntryInfo)}  {folderInfo.EntryPath}";
     }
 
     private static string GetOwner(DirectoryInfo dirInfo, int maxLength = 20)

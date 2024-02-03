@@ -6,7 +6,7 @@ namespace BLS.GlobWriters;
 public class GlobToZipWriter(ZipArgs args, TextWriter outputWriter)
     : AbstractGlobToFileWriter<ZipArgs>(args, outputWriter)
 {
-    protected override async Task WriteFilesAsync(IEnumerable<string> files, StringComparer comparer)
+    protected override async Task WriteFilesAsync(IEnumerable<FilePathInfo> files, StringComparer comparer)
     {
         bool duplicateFileInZipHandling = this.Args.ReplaceOnDuplicate || this.Args.ErrorOnDuplicate;
 
@@ -18,7 +18,7 @@ public class GlobToZipWriter(ZipArgs args, TextWriter outputWriter)
         if (duplicateFileInZipHandling)
         {
             ILookup<string, ZipArchiveEntry> zipEntryLookup = zipArchive.Entries
-                .ToLookup(ze => AbstractGlobber.NormalizePathSeparators(ze.FullName), comparer);
+                .ToLookup(ze => AbstractGlobber.NormalizePathSegmentSeparators(ze.FullName), comparer);
 
             filesInZipWithDups = zipEntryLookup
                 .Where(x => x.Skip(1).Any()) // More than one matching Entry.
@@ -33,44 +33,46 @@ public class GlobToZipWriter(ZipArgs args, TextWriter outputWriter)
             filesInZip = new HashSet<string>(comparer);
         }
 
-        foreach (string file in files)
+        foreach (FilePathInfo fileInfo in files)
         {
             if (duplicateFileInZipHandling)
             {
-                if (!filesInZip.Add(file))
+                if (!filesInZip.Add(fileInfo.EntryPath))
                 {
                     if (this.Args.ReplaceOnDuplicate)
                     {
-                        if (filesInZipWithDups.Contains(file))
+                        if (filesInZipWithDups.Contains(fileInfo.EntryPath))
                         {
                             var entriesToDelete = new List<ZipArchiveEntry>();
                             foreach (ZipArchiveEntry archiveEntry in zipArchive.Entries)
-                                if (comparer.Compare(archiveEntry.FullName, file) == 0)
+                                if (comparer.Compare(archiveEntry.FullName, fileInfo) == 0)
                                     entriesToDelete.Add(archiveEntry);
                             foreach (ZipArchiveEntry archiveEntry in entriesToDelete)
                                 archiveEntry.Delete();
-                            filesInZipWithDups.Remove(file);
+                            filesInZipWithDups.Remove(fileInfo.EntryPath);
                         }
                         else
                         {
-                            zipArchive.GetEntry(file)?.Delete();
+                            zipArchive.GetEntry(fileInfo.EntryPath)?.Delete();
                         }
                     }
                     else if (this.Args.ErrorOnDuplicate)
-                        throw new InvalidOperationException($"Zip already contains the file \"{file}\"!");
+                        throw new InvalidOperationException($"Zip already contains the file \"{fileInfo.EntryPath}\"!");
                     else
                         throw new NotImplementedException();
                 }
             }
 
-            string sourceFileName = Path.Combine(this.Args.BasePath, file);
-            ZipArchiveEntry targetEntry = zipArchive.CreateEntry(file);
-            
-            await using var sourceFileStream = File.Open(sourceFileName, FileMode.Open);
-            await using var archiveTargetStream = targetEntry.Open();
-            
-            await sourceFileStream.CopyToAsync(archiveTargetStream);
-            targetEntry.LastWriteTime = File.GetLastWriteTime(sourceFileName);
+            {
+                string sourceFileName = Path.Combine(this.Args.BasePath, fileInfo.EntryPath);
+                ZipArchiveEntry targetEntry = zipArchive.CreateEntry(fileInfo.EntryPath);
+
+                await using var sourceFileStream = File.Open(sourceFileName, FileMode.Open);
+                await using var archiveTargetStream = targetEntry.Open();
+
+                await sourceFileStream.CopyToAsync(archiveTargetStream);
+                targetEntry.LastWriteTime = File.GetLastWriteTime(sourceFileName);
+            }
         }
     }
 }

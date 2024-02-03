@@ -6,20 +6,20 @@ namespace BLS.Test
 {
     public class GlobberTests
     {
-        public static TheoryData<Func<IGlobberArgs, IGlobber>> AllGlobberFactoryMethods =>
+        public static TheoryData<Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>>> AllGlobberFactoryMethods =>
             new([
                 (IGlobberArgs args) => new SystemFileGlobber(args),
                 (IGlobberArgs args) => new FileGlobber(args)
             ]);
 
-        public static TheoryData<Func<IGlobberArgs, IGlobber>> GlobberFactoryMethodsExcludingSystemGlobber =>
+        public static TheoryData<Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>>> GlobberFactoryMethodsExcludingSystemGlobber =>
             new([
                 (IGlobberArgs args) => new FileGlobber(args)
             ]);
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindSpecificFileNameWhereExists(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindSpecificFileNameWhereExists(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "FolderLevel1.txt";
             string[] expected = [includeGlob];
@@ -29,7 +29,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindSpecificFileNameWhereExistsUsingSubfolderAsBase(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindSpecificFileNameWhereExistsUsingSubfolderAsBase(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "../FolderLevel1.txt";
             string[] expected = [includeGlob];
@@ -39,7 +39,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindSpecificFileNameWhereDoesNotExist(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindSpecificFileNameWhereDoesNotExist(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "DoesNotExist.txt";
             string[] expected = [];
@@ -49,7 +49,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesInBaseFolder(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesInBaseFolder(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "*";
             string[] expected =
@@ -64,7 +64,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesInBaseFolderWithSameBaseName(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesInBaseFolderWithSameBaseName(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "FolderLevel1.*";
             string[] expected =
@@ -78,7 +78,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesInBaseFolderWithSameExtension(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesInBaseFolderWithSameExtension(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "*.txt";
             string[] expected =
@@ -103,7 +103,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFiles(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFiles(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "**/*";
             string[] expected =
@@ -124,7 +124,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesExcludingTxt(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesExcludingTxt(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "**/*";
             string excludeGlob = "**/*.txt";
@@ -141,7 +141,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesExcludingAFolder(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesExcludingAFolder(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "**/*";
             string excludeGlob = "SubFolder2/SubSubFolder2";
@@ -161,7 +161,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesExcludingAFoldersFiles(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesExcludingAFoldersFiles(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "**/*";
             string excludeGlob = "SubFolder2/SubSubFolder2/**";
@@ -181,7 +181,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesExcludingAFoldersFilesWithChildFolders(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesExcludingAFoldersFilesWithChildFolders(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "**/*";
             string excludeGlob = "SubFolder2/**";
@@ -199,7 +199,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesUsingSubfolderAsBase(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesUsingSubfolderAsBase(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "../**/*";
             string[] expected =
@@ -220,7 +220,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesUsingSubfolderAsBaseExcludingTxtFromBase(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesUsingSubfolderAsBaseExcludingTxtFromBase(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "../**/*";
             string excludeGlob = "../**/*.txt";
@@ -238,7 +238,7 @@ namespace BLS.Test
         [Theory]
         //[MemberData(nameof(AllGlobberFactoryMethods))]
         [MemberData(nameof(GlobberFactoryMethodsExcludingSystemGlobber))]
-        public void FindAllFilesUsingSubfolderAsBaseNonRelativeExcludingTxtFromBase(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesUsingSubfolderAsBaseNonRelativeExcludingTxtFromBase(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             // SystemFileGlobber does NOT handle this properly as it end up including ALL files
 
@@ -260,7 +260,7 @@ namespace BLS.Test
 
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesAlternate(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesAlternate(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "**";
             string[] expected =
@@ -281,7 +281,7 @@ namespace BLS.Test
         
         [Theory]
         [MemberData(nameof(AllGlobberFactoryMethods))]
-        public void FindAllFilesWithSameExtension(Func<IGlobberArgs, IGlobber> globberFactory)
+        public void FindAllFilesWithSameExtension(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactory)
         {
             string includeGlob = "**/*.txt";
             string[] expected =
@@ -296,14 +296,14 @@ namespace BLS.Test
             ExecuteGlobAndValidate(globberFactory, expected, "GlobTestFiles", includeGlob);
         }
 
-        private static void ExecuteGlobAndValidate(Func<IGlobberArgs, IGlobber> globberFactoryMethod,
+        private static void ExecuteGlobAndValidate(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactoryMethod,
             IEnumerable<string> expected, string basePath, string includeGlob, string? excludeGlob = null)
         {
             ImmutableList<string> results = ExecuteGlob(globberFactoryMethod, basePath, includeGlob, excludeGlob);
             results.Should().BeEquivalentTo(expected);
         }
 
-        private static ImmutableList<string> ExecuteGlob(Func<IGlobberArgs, IGlobber> globberFactoryMethod,
+        private static ImmutableList<string> ExecuteGlob(Func<IGlobberArgs, IGlobber<FilePathInfo, FileInfo>> globberFactoryMethod,
             string basePath, string includeGlob, string? excludeGlob = null, Func<GlobberTestArgs, GlobberTestArgs>? updateArgsFunc = null)
         {
             var args = new GlobberTestArgs()
@@ -316,9 +316,9 @@ namespace BLS.Test
             if (updateArgsFunc != null)
                 args = updateArgsFunc(args);
 
-            IGlobber globber = globberFactoryMethod(args);
+            IGlobber<FilePathInfo, FileInfo> globber = globberFactoryMethod(args);
 
-            return globber.Execute().Select(p => AbstractGlobber.ToForwardSlashPathSeparators(p)).ToImmutableList();
+            return globber.Execute().Select(p => AbstractGlobber.ToAlternatePathSegmentSeparators(p.EntryPath)).ToImmutableList();
         }
     }
 }

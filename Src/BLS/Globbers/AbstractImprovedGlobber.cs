@@ -5,8 +5,9 @@ using DotNet.Globbing;
 
 namespace BLS.Globbers;
 
-public abstract partial class AbstractImprovedGlobber<TFileSysInfo> : AbstractGlobber
+public abstract partial class AbstractImprovedGlobber<TFolderEntryPathInfo, TFileSysInfo> : AbstractGlobber<TFolderEntryPathInfo, TFileSysInfo>
     where TFileSysInfo : FileSystemInfo
+    where TFolderEntryPathInfo : IFolderEntryPathInfo<TFileSysInfo>
 {
     // Derived from: https://stackoverflow.com/a/54300816/677612
     // Check out: https://stackoverflow.com/a/34580159/677612
@@ -25,7 +26,7 @@ public abstract partial class AbstractImprovedGlobber<TFileSysInfo> : AbstractGl
             .ToImmutableList();
     }
 
-    protected override IEnumerable<string> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions)
+    protected override IEnumerable<TFolderEntryPathInfo> FindMatches(string basePath, IgnoredExceptionSet ignoredExceptions)
     {
         StringComparer stringComparer = this.Args.CaseSensitive
             ? StringComparer.InvariantCulture
@@ -37,9 +38,7 @@ public abstract partial class AbstractImprovedGlobber<TFileSysInfo> : AbstractGl
         foreach (string globPath in this.Args.ExcludeGlobPaths)
             this.ValidateGlobPath(globPath, false);
 
-        string normalizedBasePath = ToBackSlashPathSeparators(basePath);
-
-        DirectoryInfo baseDir = new(normalizedBasePath);
+        DirectoryInfo baseDir = new(basePath);
         DirectoryInfo commonRootDir = this.DetermineCommonRootPathFromBasePathAndIncludes(baseDir, stringComparer);
 
         ImmutableList<IncludeGlobber> includeInfos = this.Args.IncludeGlobPaths
@@ -54,10 +53,10 @@ public abstract partial class AbstractImprovedGlobber<TFileSysInfo> : AbstractGl
 
         foreach (TFileSysInfo fileSysInfo in this.EnumerateAllEntries(commonRootDir, includeInfos, excludeGlobs, commonRootDir, baseDir, ignoredExceptions))
         {
-            string fileName = BuildRelativeName(fileSysInfo.FullName, commonRootDir, baseDir);
+            string folderEntryName = BuildRelativeName(fileSysInfo.FullName, commonRootDir, baseDir);
 
-            if (includeInfos.Any(glob => glob.IsMatch(fileName)) && !excludeGlobs.Any(glob => glob.IsMatch(fileName)))
-                yield return fileName;
+            if (includeInfos.Any(glob => glob.IsMatch(folderEntryName)) && !excludeGlobs.Any(glob => glob.IsMatch(folderEntryName)))
+                yield return this.CreateOutputEntry(basePath, folderEntryName, fileSysInfo);
         }
     }
 

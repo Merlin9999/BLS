@@ -1,18 +1,20 @@
-﻿namespace BLS.GlobWriters;
+﻿using BLS.Globbers;
+
+namespace BLS.GlobWriters;
 
 public class GlobAndCopyFilesWriter(CopyFilesArgs args, TextWriter outputWriter)
     : AbstractGlobToFileWriter<CopyFilesArgs>(args, outputWriter)
 {
-    protected override async Task WriteFilesAsync(IEnumerable<string> files, StringComparer comparer)
+    protected override async Task WriteFilesAsync(IEnumerable<FilePathInfo> files, StringComparer comparer)
     {
-        foreach (string file in files)
+        foreach (FilePathInfo fileInfo in files)
         {
-            string sourceFileName = Path.Combine(this.Args.BasePath, file);
-            string targetFileName = Path.Combine(this.Args.TargetFolder, file);
+            string sourceFileName = Path.Combine(this.Args.BasePath, fileInfo.EntryPath);
+            string targetFileName = Path.Combine(this.Args.TargetFolder, fileInfo.EntryPath);
             
             {
                 if (this.Args.ErrorOnDuplicate && File.Exists(targetFileName))
-                    throw new InvalidOperationException($"The file \"{file}\" already exists!");
+                    throw new InvalidOperationException($"The file \"{fileInfo.EntryPath}\" already exists!");
 
                 string? targetDirectory = Path.GetDirectoryName(targetFileName);
                 if (!string.IsNullOrEmpty(targetDirectory))
@@ -25,7 +27,7 @@ public class GlobAndCopyFilesWriter(CopyFilesArgs args, TextWriter outputWriter)
             }
 
             // Block above ensures that the files above were flushed and closed before assigning the time.
-            File.SetLastWriteTime(targetFileName, File.GetLastWriteTime(sourceFileName));
+            File.SetLastWriteTime(targetFileName, fileInfo.EntryInfo.LastWriteTime);
         }
     }
 }
