@@ -94,6 +94,10 @@
     "BLS - Glob Help": {
       "commandName": "Project",
       "commandLineArgs": "glob"
+    },
+    "GLS - Network path": {
+      "commandName": "Project",
+      "commandLineArgs": "** -b \\\\Orion\\Obsidian -q"
     }
   }
 }

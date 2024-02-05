@@ -1,11 +1,15 @@
 ﻿using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 using BLS.Extensions;
 
 namespace BLS.Globbers;
 
-public abstract class AbstractGlobber
+public abstract partial class AbstractGlobber
 {
+    [GeneratedRegex(@"^[\\/]{2}[^\\/]+")]
+    private static partial Regex GetNetShareRegex();
+
     private static bool? _areBackSlashPathSegmentSeparatorsStandard;
     private static bool? _areForwardSlashPathSegmentSeparatorsStandard;
 
@@ -32,8 +36,19 @@ public abstract class AbstractGlobber
 
     public static ImmutableList<string> SplitPathIntoSegments(string path)
     {
-        return path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+        Regex netShareRegex = GetNetShareRegex();
+        bool isNetShare = netShareRegex.IsMatch(path);
+        string netSharePrefix = isNetShare ? path.Substring(0, 2) : string.Empty;
+        path = isNetShare ? path.Substring(2) : path;
+
+        ImmutableList<string> segments = path
+            .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             .ToImmutableList();
+
+        if (isNetShare)
+            segments = segments.SetItem(0, netSharePrefix + segments[0]);
+
+        return segments;
     }
 
     public static ImmutableList<string> SplitPathAndNormalizeRelativeSegments(string path)
