@@ -87,6 +87,18 @@
       "commandName": "Project",
       "commandLineArgs": "copy **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -t CopiedFiles -r"
     },
+    "BLS - Copy to Rooted and Nested": {
+      "commandName": "Project",
+      "commandLineArgs": "copy **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -t C:\\Fls\\Projects\\MyGitHub\\BLS\\Src\\BLS\\bin\\Debug\\net8.0\\CopiedFiles -r"
+    },
+    "BLS - Copy to Rooted": {
+      "commandName": "Project",
+      "commandLineArgs": "copy **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -t C:\\CopiedFiles -r"
+    },
+    "BLS - Path XCopy.exe": {
+      "commandName": "Project",
+      "commandLineArgs": "path XCopy.exe"
+    },
     "BLS - Project Folders": {
       "commandName": "Project",
       "commandLineArgs": "folders ..\\..\\..\\**\\*"
@@ -95,7 +107,7 @@
       "commandName": "Project",
       "commandLineArgs": "glob"
     },
-    "GLS - Network path": {
+    "BLS - Network path": {
       "commandName": "Project",
       "commandLineArgs": "** -b \\\\Orion\\Obsidian -q"
     }
