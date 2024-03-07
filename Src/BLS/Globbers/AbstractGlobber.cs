@@ -24,6 +24,7 @@ public abstract partial class AbstractGlobber
         : AreBackSlashPathSegmentSeparatorsStandard
             ? ToAlternatePathSegmentSeparators(path)
             : path;
+    public static string TrimTrailingPathSegmentSeparators(string path) => path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
     public static string BuildRelativeName(string fullEntryNamePath, DirectoryInfo commonRootDir, DirectoryInfo baseDir)
     {
