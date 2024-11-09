@@ -3,6 +3,10 @@
     "BLS - No Args": {
       "commandName": "Project"
     },
+    "BLS - Files Help": {
+      "commandName": "Project",
+      "commandLineArgs": "files"
+    },
     "BLS - All Files": {
       "commandName": "Project",
       "commandLineArgs": "**\\*"
@@ -110,6 +114,18 @@
     "BLS - Network path": {
       "commandName": "Project",
       "commandLineArgs": "** -b \\\\Orion\\Obsidian -q"
+    },
+    "BLS - Encode": {
+      "commandName": "Project",
+      "commandLineArgs": "encode **\\* -b ..\\..\\.. -x **\\Bin\\** **\\Obj\\** -t Base64Encoded"
+    },
+    "BLS - Decode": {
+      "commandName": "Project",
+      "commandLineArgs": "decode **\\* -b Base64Encoded -t Base64Decoded"
+    },
+    "BLS - Decode w Ext": {
+      "commandName": "Project",
+      "commandLineArgs": "decode **\\* -d .decoded -b Base64Encoded -t Base64DecodedExt"
     }
   }
 }
