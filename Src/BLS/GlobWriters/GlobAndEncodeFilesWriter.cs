@@ -1,29 +1,33 @@
-﻿using BLS.Globbers;
+﻿using System.Buffers.Text;
+using System.Security.Cryptography;
+using BLS.Globbers;
 
 namespace BLS.GlobWriters;
 
-public class GlobAndCopyFilesWriter(CopyFilesArgs args, TextWriter outputWriter)
-    : AbstractGlobToFileWriter<CopyFilesArgs>(args, outputWriter)
+public class GlobAndEncodeFilesWriter(EncodeFilesArgs args, TextWriter outputWriter)
+    : AbstractGlobToFileWriter<EncodeFilesArgs>(args, outputWriter)
 {
     protected override async Task WriteFilesAsync(IEnumerable<FilePathInfo> files, StringComparer comparer)
     {
         foreach (FilePathInfo fileInfo in files)
         {
             string sourceFileName = Path.Combine(this.Args.BasePath, fileInfo.EntryPath);
-            string targetFileName = Path.Combine(this.Args.TargetFolder, fileInfo.EntryPath);
-            
+            string targetFileNameWithoutBasePath = fileInfo.EntryPath + args.EncodedExtension;
+            string targetFileName = Path.Combine(this.Args.TargetFolder, targetFileNameWithoutBasePath);
+
             {
                 if (this.Args.ErrorOnDuplicate && File.Exists(targetFileName))
-                    throw new InvalidOperationException($"The file \"{fileInfo.EntryPath}\" already exists!");
+                    throw new InvalidOperationException($"The file \"{targetFileNameWithoutBasePath}\" already exists!");
 
                 string? targetDirectory = Path.GetDirectoryName(targetFileName);
                 if (!string.IsNullOrEmpty(targetDirectory))
                     Directory.CreateDirectory(targetDirectory);
-
+                
                 await using var sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.None);
+                await using var base64Stream = new CryptoStream(sourceFileStream, new ToBase64Transform(), CryptoStreamMode.Read);
                 await using var targetFileStream = File.Open(targetFileName, FileMode.Create, FileAccess.Write, FileShare.None);
 
-                await sourceFileStream.CopyToAsync(targetFileStream);
+                await base64Stream.CopyToAsync(targetFileStream);
             }
 
             // Block above ensures that the files above were flushed and closed before assigning the time.

@@ -5,9 +5,9 @@ using Serilog;
 
 namespace BLS.Handlers;
 
-public class CopyFilesHandler(ILogger logger) : AbstractGlobberHandler, IRequestHandler<CopyFilesArgs, EExitCode>
+public class DecodeFilesHandler(ILogger logger) : AbstractGlobberHandler, IRequestHandler<DecodeFilesArgs, EExitCode>
 {
-    public async Task<EExitCode> Handle(CopyFilesArgs request, CancellationToken cancellationToken)
+    public async Task<EExitCode> Handle(DecodeFilesArgs request, CancellationToken cancellationToken)
     {
         LogArgs(request, logger);
 
@@ -26,7 +26,7 @@ public class CopyFilesHandler(ILogger logger) : AbstractGlobberHandler, IRequest
             }
         }
 
-        var copyFilesWriter = new GlobAndCopyFilesWriter(request, Console.Out);
+        var copyFilesWriter = new GlobAndDecodeFilesWriter(request, Console.Out);
         await copyFilesWriter.ExecuteAsync();
 
         return EExitCode.Success;

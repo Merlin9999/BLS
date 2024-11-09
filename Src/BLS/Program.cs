@@ -22,6 +22,7 @@ public enum EExitCode
 internal abstract class Program
 {
     private static readonly ServiceCollection Services = new();
+    public static readonly string Base64Extension = ".base64";
 
     static int Main(string[] args)
     {
@@ -40,7 +41,7 @@ internal abstract class Program
                 cfg.CaseInsensitiveEnumValues = true;
             });
 
-            ParserResult<object> parserResult = argsParser.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs, GlobHelpArgs>(args);
+            ParserResult<object> parserResult = argsParser.ParseArguments<ListFilesArgs, ListFoldersArgs, SearchPathArgs, ZipArgs, CopyFilesArgs, EncodeFilesArgs, DecodeFilesArgs, GlobHelpArgs>(args);
 
             retValue = parserResult.MapResult(
                 (ListFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
@@ -48,6 +49,8 @@ internal abstract class Program
                 (SearchPathArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (ZipArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (CopyFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (EncodeFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
+                (DecodeFilesArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (GlobHelpArgs options) => AsyncContext.Run(() => AsyncMain(options)),
                 (errors) => EExitCode.InvalidApplicationArguments);
 
@@ -63,6 +66,7 @@ internal abstract class Program
             Log.CloseAndFlush();
         }
     }
+
     static async Task<EExitCode> AsyncMain<TOptions>(TOptions options)
         where TOptions : IRequest<EExitCode>
     {
@@ -204,6 +208,62 @@ public class CopyFilesArgs : GlobToWriteFileBaseArgs, IGlobToWriteFileAndFactory
 {
     [Option('t', "target-path", Required = true, HelpText = "Target folder to copy files to")]
     public required string TargetFolder { get; set; }
+
+    [Option('r', "replace-files", Default = false, HelpText = "Toggle replacing files that already exist")]
+    public bool ReplaceOnDuplicate { get; set; }
+
+    public bool ErrorOnDuplicate
+    {
+        get => !this.ReplaceOnDuplicate;
+        set => this.ReplaceOnDuplicate = !value;
+    }
+
+    [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
+    public bool UseFrameworkGlobber { get; set; }
+
+    public ESortType? Sort { get; set; } // Defaults to null => Name Sort
+    public bool SortDescending { get; set; } // Defaults to false => Ascending Sort
+}
+
+[Verb("encode-files", isDefault: false, ["encode"], HelpText = "Encode Files to Base64")]
+public class EncodeFilesArgs : GlobToWriteFileBaseArgs, IGlobToWriteFileAndFactoryArgs, IRequest<EExitCode>
+{
+    [Option('t', "target-path", Required = true, HelpText = "Target folder to write encoded files. Default is the current working directory.")]
+    public required string TargetFolder { get; set; }
+
+    [Option('e', "encoded-extension", HelpText = "Extension added when encoding. Default is .base64")]
+    public string EncodedExtensionDoNotAccessDirectly { get; set; } = Program.Base64Extension;
+    public string EncodedExtension => this.EncodedExtensionDoNotAccessDirectly.StartsWith('.') ? this.EncodedExtensionDoNotAccessDirectly : $".{this.EncodedExtensionDoNotAccessDirectly}";
+
+    [Option('r', "replace-files", Default = false, HelpText = "Toggle replacing files that already exist")]
+    public bool ReplaceOnDuplicate { get; set; }
+
+    public bool ErrorOnDuplicate
+    {
+        get => !this.ReplaceOnDuplicate;
+        set => this.ReplaceOnDuplicate = !value;
+    }
+
+    [Option('f', "use-framework-globber", Default = false, HelpText = "Revert to DotNet Framework Globber")]
+    public bool UseFrameworkGlobber { get; set; }
+
+    public ESortType? Sort { get; set; } // Defaults to null => Name Sort
+    public bool SortDescending { get; set; } // Defaults to false => Ascending Sort
+}
+
+[Verb("decode-files", isDefault: false, ["decode"], HelpText = "Decode Base64 Files")]
+public class DecodeFilesArgs : GlobToWriteFileBaseArgs, IGlobToWriteFileAndFactoryArgs, IRequest<EExitCode>
+{
+    [Option('t', "target-path", Required = true, HelpText = "Target folder to write encoded files. Default is the current working directory.")]
+    public required string TargetFolder { get; set; }
+
+    [Option('e', "encoded-extension", HelpText = "Extension removed when decoding. Default is .base64")]
+    public string EncodedExtensionDoNotAccessDirectly { get; set; } = Program.Base64Extension;
+    public string EncodedExtension => this.EncodedExtensionDoNotAccessDirectly.StartsWith('.') ? this.EncodedExtensionDoNotAccessDirectly : $".{this.EncodedExtensionDoNotAccessDirectly}";
+
+    [Option('d', "decoded-extension", HelpText = "Extension added when decoding. By default, no extension is added.")]
+    public string? DecodedExtensionDoNotAccessDirectly { get; set; }
+    public string? DecodedExtension => this.DecodedExtensionDoNotAccessDirectly == null || this.DecodedExtensionDoNotAccessDirectly.StartsWith('.') ? this.DecodedExtensionDoNotAccessDirectly : $".{this.DecodedExtensionDoNotAccessDirectly}";
 
     [Option('r', "replace-files", Default = false, HelpText = "Toggle replacing files that already exist")]
     public bool ReplaceOnDuplicate { get; set; }
