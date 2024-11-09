@@ -3,6 +3,10 @@
     "BLS - No Args": {
       "commandName": "Project"
     },
+    "BLS - Files Help": {
+      "commandName": "Project",
+      "commandLineArgs": "files"
+    },
     "BLS - All Files": {
       "commandName": "Project",
       "commandLineArgs": "**\\*"

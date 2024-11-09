@@ -235,10 +235,10 @@ public class GlobToWriteFileBaseArgs : BaseArgs
 
 public abstract class BaseArgs
 {
-    [Value(0, Required = true, MetaName = "Include Glob List", HelpText = "Leading positional \"Include Glob\" list. At least 1 is required.")]
+    [Value(0, Required = true, MetaName = "Include File Specs.", HelpText = "Initial positional args (1 or more) - Glob Formatting (e.g. **, *, ?)")]
     public IEnumerable<string> IncludeGlobPaths { get; set; } = new List<string>();
 
-    [Option('x', "exclude", HelpText = "\"Exclude Glob\" list (optional)")]
+    [Option('x', "exclude", HelpText = "Exclude File Specs. (1 or more) - Glob Formatting (e.g. **, *, ?)")]
     public IEnumerable<string> ExcludeGlobPaths { get; set; } = new List<string>();
 
     [Option('q', "fully-qualified-paths", HelpText = "Output fully qualified paths")]
