@@ -13,7 +13,7 @@ public abstract class AbstractGlobToFileWriter<TArgs>(TArgs args, TextWriter out
         bool foundParentFolderInIncludes = this.Args.IncludeGlobPaths
             .Any(p => AbstractGlobber.SplitPathAndNormalizeRelativeSegments(p).StartsWith(ParentFolderAsArray));
         if (foundParentFolderInIncludes)
-            throw new ArgumentException("Avoid using \"..\" folders in glob expressions when creating a zip file!");
+            throw new ArgumentException("Avoid using \"..\" folders in glob expressions when creating a zip file or copying files!");
 
         IGlobber<FilePathInfo, FileInfo> globber = FileGlobberFactory.Create(this.Args);
 
